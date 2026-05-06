@@ -1,4 +1,6 @@
 import {useState} from "react";
+import maxImg from "../assets/max.jpeg";
+import "./LoginForm.css";
 
 export default function LoginForms() {
   const [username, setUsername] = useState("");
@@ -15,6 +17,12 @@ export default function LoginForms() {
   }
 
   return (
+      <div className="login-page">
+      <div className="login-image" style={{ backgroundImage: `url(${maxImg})` }}>
+        <div className="image-overlay">
+        </div>
+      </div>
+
     <div className="login">
       <h1 id="login-title">Iniciar Sesión</h1>
       <form className="formLogin" onSubmit={(e) => {e.preventDefault(); login(username, password);}}>
@@ -40,6 +48,7 @@ export default function LoginForms() {
         Ingresar
       </button>
       </form>
+    </div>
     </div>
   );
 }
