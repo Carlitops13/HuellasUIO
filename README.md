@@ -1,10 +1,12 @@
 
-🐾 Huellas UIO: Plataforma de Adopción Comunitaria
+# 🐾 Huellas UIO: Plataforma de Adopción Comunitaria
 
-Problema:
-n los últimos años, la ciudad de Quito ha experimentado un incremento significativo en la población de perros comunitarios, entendidos como aquellos animales que, sin tener un propietario definido, son alimentados y cuidados parcialmente por miembros de la comunidad. Esta situación plantea diversos desafíos en términos de bienestar animal, salud pública y organización social, debido a la falta de control sistemático sobre su estado sanitario, reproducción y condiciones de vida.
+## Problema:
 
-Objetivo:
+En los últimos años, la ciudad de Quito ha experimentado un incremento significativo en la población de perros comunitarios, entendidos como aquellos animales que, sin tener un propietario definido, son alimentados y cuidados parcialmente por miembros de la comunidad. Esta situación plantea diversos desafíos en términos de bienestar animal, salud pública y organización social, debido a la falta de control sistemático sobre su estado sanitario, reproducción y condiciones de vida.
+
+## Objetivo:
+
 Desarrollar una plataforma web para la adopcion de mascotas comunitarias en la ciudad de Quito para controlar la situacion de abandono de la fauna urbana de la ciudad. 
 
 ```
