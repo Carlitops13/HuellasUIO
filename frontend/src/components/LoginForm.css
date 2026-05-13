@@ -1,100 +1,150 @@
-body, html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: 'Inter', sans-serif;
+:root {
+  --primary-orange: #ff8c00;
+  --bg-purple-light: #eceaff;
+  --text-dark: #1a1a1a;
 }
 
 .login-page {
   display: flex;
   min-height: 100vh;
+  background-color: white;
 }
 
-.login-image {
-  flex: 1;
-  background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)), 
-              url('https://www.instagram.com/p/DXGEQC9Esva/'); 
-  background-size: cover;
-  background-position: center;
+.login-left {
+  flex: 1.2;
+  background-color: var(--bg-purple-light);
   display: flex;
-  align-items: flex-end;
-  padding: 60px;
-  color: white;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
 }
 
-.image-text h2 {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
+.left-content {
+  max-width: 400px;
 }
-.login-container {
+
+.left-content h1 {
+  font-size: 2.5rem;
+  color: var(--text-dark);
+  margin-bottom: 20px;
+}
+
+.left-content h1 span {
+  color: #a0522d;
+  font-style: italic;
+}
+
+.left-content p {
+  color: #555;
+  margin-bottom: 40px;
+  line-height: 1.5;
+}
+
+.imagen {
+  position: relative;
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.imagen img {
+  width: 100%;
+  display: block;
+}
+
+.badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #40e0d0;
+  color: #000;
+  padding: 5px 15px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 0.7rem;
+}
+
+.login-right {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #fdfaf5; 
+  padding: 40px;
 }
 
-.login {
+.login-box {
   width: 100%;
   max-width: 400px;
-  padding: 20px;
 }
 
-#login-title {
-  color: #8b4513; 
+.login-box h2 {
   font-size: 2rem;
-  margin-bottom: 5px;
-  text-align: center;
+  margin-bottom: 10px;
 }
 
-.subtitle {
+.bienvenida {
   color: #666;
-  text-align: center;
   margin-bottom: 30px;
   font-size: 0.9rem;
 }
 
-.input-container {
+.input-group {
+  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-label {
-  font-size: 0.85rem;
+.input-group label {
   font-weight: 600;
-  color: #444;
+  font-size: 0.85rem;
 }
 
-input {
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  background-color: #fff;
+.input-group input {
+  padding: 15px;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+  background-color: #f5f5f5;
   font-size: 1rem;
-  margin-bottom: 15px;
-  outline: none;
-  transition: border 0.2s;
 }
 
-input:focus {
-  border-color: #8b4513;
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  font-size: 0.85rem;
+}
+
+.forgot-pass {
+  color: #a0522d;
+  text-decoration: none;
+  font-weight: 600;
 }
 
 #ingresar {
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 15px;
+  border-radius: 25px;
   border: none;
-  background-color: #8b4513;
+  background: linear-gradient(to right, #ff8c00, #ffa500);
   color: white;
-  font-weight: 600;
+  font-weight: bold;
   font-size: 1rem;
   cursor: pointer;
-  margin-top: 10px;
-  transition: opacity 0.3s;
+  box-shadow: 0 10px 20px rgba(255, 140, 0, 0.3);
 }
 
-#ingresar:hover {
-  opacity: 0.9;
+.register-link {
+  margin-top: 30px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.register-link a {
+  color: #008080;
+  font-weight: bold;
+  text-decoration: none;
 }
