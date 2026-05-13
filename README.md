@@ -44,3 +44,7 @@ Desarrollar una plataforma web para la adopcion de mascotas comunitarias en la c
 ```
 ### 🎨 Diseño del Proyecto Y Mockups
 [ ![Figma Icon](https://img.icons8.com/color/24/000000/figma--v1.png) Ver Mockup en Figma](https://www.figma.com/design/5IwfHmU4TdmWZgwkdqqQeH/MockUpHuellasUIO?t=nQJmvUKuchi8QDmD-1)
+
+### Inicio de sesión 
+<img width="1347" height="765" alt="image" src="https://github.com/user-attachments/assets/bb6636cc-8c9a-43a9-ac74-9747eabfba15" />
+
