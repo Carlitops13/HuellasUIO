@@ -13,5 +13,14 @@ router.post('/logout', requireAuth, authController.logout);
 //Actualizar contraseña necesita autenticación
 router.post('/update-password', requireAuth, authController.actualizarPassword);
 
+// Recuperar contraseña
+router.post('/recuperarClave', authController.recuperarClave);
+
+// Confirmar recuperación de contraseña
+router.post('/recuperarClave/confirm', authController.confirmarRecuperarClave);
+
 module.exports = router;
+    
+    
+    
     
