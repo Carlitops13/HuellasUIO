@@ -4,9 +4,62 @@ const PERFILES_API_URL = "http://localhost:3000/api/perfiles";
 /**
  * Inicia sesión del usuario enviando credenciales al backend de Express.
  */
+export async function confirmRecoverPassword(accessToken, password) {
+  try {
+    const response = await fetch(`${API_URL}/recuperarClave/confirm`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ access_token: accessToken, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Error al confirmar recuperación de contraseña.");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error en confirmRecoverPassword service:", error);
+    throw error;
+  }
+}
+
+/**
+ * Inicia sesión del usuario enviando credenciales al backend de Express.
+ */
+export async function recoverPassword(email) {
+  try {
+    const response = await fetch(`${API_URL}/recuperarClave`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Error al recuperar contraseña.");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error en recoverPassword service:", error);
+    throw error;
+  }
+}
+
+/**
+ * Inicia sesión del usuario enviando credenciales al backend de Express.
+ */
 export async function loginUser(email, password) {
   try {
     const response = await fetch(`${API_URL}/login`, {
+
       method: "POST",
       headers: {
         "Content-Type": "application/json",

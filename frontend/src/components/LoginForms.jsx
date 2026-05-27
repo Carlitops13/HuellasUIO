@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { loginUser, registerUser } from "../services/authService";
+import { loginUser, registerUser, recoverPassword } from "../services/authService";
 import maxImage from "../assets/max.webp";
 
 export default function LoginForms({ onLoginSuccess }) {
@@ -27,7 +27,9 @@ export default function LoginForms({ onLoginSuccess }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Efecto visual de entrada original
+
   useEffect(() => {
+
     const elements = document.querySelectorAll('.animate-fade-in-up');
     elements.forEach((el, index) => {
       el.style.opacity = '0';
@@ -42,6 +44,7 @@ export default function LoginForms({ onLoginSuccess }) {
 
   // Manejar el envío de Login
   const handleLoginSubmit = async (e) => {
+
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -256,7 +259,38 @@ export default function LoginForms({ onLoginSuccess }) {
                           <input className="w-4 h-4 rounded border-[#89726d] text-[#9d3d2c] focus:ring-[#9d3d2c] focus:ring-offset-0 transition-all" type="checkbox" />
                           <span className="text-[#56423e] group-hover:text-[#9d3d2c] transition-colors">Recordarme</span>
                         </label>
-                        <a className="text-[#9d3d2c] hover:text-[#802919] transition-all" href="#">¿Olvidaste tu contraseña?</a>
+                        <a
+                          className="text-[#9d3d2c] hover:text-[#802919] transition-all"
+                          href="#"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            setError("");
+                            setSuccess("");
+
+                            const trimmedEmail = loginEmail.trim();
+                            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                            if (!trimmedEmail) {
+                              setError("Por favor ingresa tu correo para recuperar la contraseña.");
+                              return;
+                            }
+                            if (!emailRegex.test(trimmedEmail)) {
+                              setError("Por favor ingresa un correo electrónico válido.");
+                              return;
+                            }
+
+                            setIsLoading(true);
+                            try {
+                              await recoverPassword(trimmedEmail);
+                              setSuccess("Revisa tu correo: si existe tu cuenta, te enviaremos un enlace para recuperar tu contraseña.");
+                            } catch (err) {
+                              setError(err.message || "No se pudo iniciar la recuperación de contraseña.");
+                            } finally {
+                              setIsLoading(false);
+                            }
+                          }}
+                        >
+                          ¿Olvidaste tu contraseña?
+                        </a>
                       </div>
 
                       <button type="submit" disabled={isLoading} className="w-full py-3 bg-gradient-to-r from-[#9d3d2c] to-[#bd5541] text-white rounded-full font-bold shadow-lg shadow-[#9d3d2c]/30 hover:shadow-xl hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
