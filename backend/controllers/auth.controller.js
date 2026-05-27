@@ -1,3 +1,4 @@
+const { createClient } = require('@supabase/supabase-js');
 const supabase = require('../supabase');
 
 /**
@@ -102,19 +103,49 @@ const logout = async (req, res) => {
  * Actualiza la contraseña del usuario en Supabase Auth.
  */
 const actualizarPassword = async (req, res) => {
-  const { password } = req.body;
+  const { oldPassword, password } = req.body;
+
+  if (!oldPassword) {
+    return res.status(400).json({
+      error: 'Por favor, proporciona la contraseña antigua.'
+    });
+  }
 
   if (!password || password.length < 6) {
     return res.status(400).json({
-      error: 'La contraseña debe tener al menos 6 caracteres.'
+      error: 'La nueva contraseña debe tener al menos 6 caracteres.'
     });
   }
 
   try {
-    const { data, error } = await req.supabase.auth.updateUser({ password });
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
+    // Crear un cliente temporal de Supabase para verificar las credenciales actuales
+    const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    });
+
+    // Iniciar sesión con el email del usuario y la contraseña antigua
+    const { data: loginData, error: loginError } = await tempClient.auth.signInWithPassword({
+      email: req.user.email,
+      password: oldPassword
+    });
+
+    if (loginError) {
+      return res.status(400).json({
+        error: 'La contraseña antigua es incorrecta.'
+      });
+    }
+
+    // Una vez autenticado exitosamente en el cliente temporal, procedemos a actualizar la contraseña
+    const { error: updateError } = await tempClient.auth.updateUser({ password });
+
+    if (updateError) {
+      return res.status(400).json({ error: updateError.message });
     }
 
     return res.status(200).json({

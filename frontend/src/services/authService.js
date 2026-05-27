@@ -137,7 +137,7 @@ export async function updateProfile(profileData, token) {
 /**
  * Actualiza la contraseña en Supabase Auth.
  */
-export async function updatePassword(password, token) {
+export async function updatePassword(oldPassword, password, token) {
   try {
     const response = await fetch(`${API_URL}/update-password`, {
       method: "POST",
@@ -145,7 +145,7 @@ export async function updatePassword(password, token) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ oldPassword, password }),
     });
 
     const data = await response.json();

@@ -21,8 +21,10 @@ export default function UserProfile({ token, onLogout }) {
   const [isProfilePending, setIsProfilePending] = useState(false);
 
   // Estados para cambiar contraseña
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
@@ -138,6 +140,11 @@ export default function UserProfile({ token, onLogout }) {
     setError("");
     setSuccess("");
 
+    if (!oldPassword) {
+      setError("Por favor, ingresa tu contraseña antigua.");
+      return;
+    }
+
     // Validación nueva contraseña
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
     if (!passwordRegex.test(newPassword)) {
@@ -153,10 +160,12 @@ export default function UserProfile({ token, onLogout }) {
     setIsLoading(true);
 
     try {
-      await updatePassword(newPassword, token);
+      await updatePassword(oldPassword, newPassword, token);
       setSuccess("Contraseña actualizada con éxito.");
+      setOldPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
+      setShowOldPassword(false);
       setShowNewPassword(false);
       setShowConfirmNewPassword(false);
 
@@ -320,6 +329,30 @@ export default function UserProfile({ token, onLogout }) {
                   <form className="space-y-4" onSubmit={handlePasswordUpdate}>
                     <div className="space-y-3">
                       <div className="space-y-1">
+                        <label className="text-xs font-bold text-[#56423e] ml-1" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>Contraseña antigua</label>
+                        <div className="relative group">
+                          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#89726d] group-focus-within:text-[#9d3d2c] transition-colors text-lg">lock</span>
+                          <input 
+                            className="w-full pl-11 pr-10 py-2.5 bg-[#f7f3ee] rounded-xl border border-[#ddc0bb] focus:border-[#9d3d2c] focus:ring-4 focus:ring-[#9d3d2c]/10 transition-all text-[#1c1c19] placeholder:text-[#89726d]/50 outline-none text-sm" 
+                            placeholder="Introduce tu contraseña actual" 
+                            type={showOldPassword ? "text" : "password"}
+                            value={oldPassword}
+                            onChange={(e) => setOldPassword(e.target.value)}
+                            required
+                            style={{ fontFamily: "'Nunito Sans', sans-serif" }}
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => setShowOldPassword(!showOldPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#89726d] hover:text-[#9d3d2c] transition-colors focus:outline-none flex items-center justify-center"
+                          >
+                            <span className="material-symbols-outlined text-lg">
+                              {showOldPassword ? "visibility" : "visibility_off"}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
                         <label className="text-xs font-bold text-[#56423e] ml-1" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>Nueva contraseña</label>
                         <div className="relative group">
                           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#89726d] group-focus-within:text-[#9d3d2c] transition-colors text-lg">lock</span>
@@ -376,7 +409,17 @@ export default function UserProfile({ token, onLogout }) {
                       </button>
                       <button 
                         type="button" 
-                        onClick={() => { setIsEditingPassword(false); setError(""); setSuccess(""); }} 
+                        onClick={() => { 
+                          setIsEditingPassword(false); 
+                          setError(""); 
+                          setSuccess(""); 
+                          setOldPassword(""); 
+                          setNewPassword(""); 
+                          setConfirmNewPassword(""); 
+                          setShowOldPassword(false); 
+                          setShowNewPassword(false); 
+                          setShowConfirmNewPassword(false); 
+                        }} 
                         className="w-full py-3 bg-white border border-[#ddd9d5] text-[#1c1c19] rounded-full font-bold hover:bg-[#f7f3ee] transition-all text-xs"
                         style={{ fontFamily: "'Nunito Sans', sans-serif" }}
                       >
