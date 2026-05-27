@@ -10,7 +10,7 @@ const obtenerMiPerfil = async (req, res) => {
       .single();
 
     if (error) {
-      // Si el error es que la fila no existe (código PGRST116), la creamos al vuelo
+      // Si el error es que la fila no existe (código PGRST116)
       if (error.code === 'PGRST116') {
         const profileData = {
           id: req.user.id,
