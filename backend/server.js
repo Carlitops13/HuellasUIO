@@ -5,6 +5,7 @@ const cors = require('cors');
 // Importar rutas
 const authRoutes = require('./routes/auth.routes');
 const perfilesRoutes = require('./routes/perfiles.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
 // Registro de rutas de la API
 app.use('/api/auth', authRoutes);
 app.use('/api/perfiles', perfilesRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Middleware para capturar rutas no encontradas (404)
 app.use((req, res, next) => {
