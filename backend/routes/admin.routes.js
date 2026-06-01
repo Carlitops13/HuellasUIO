@@ -48,9 +48,14 @@ router.get('/viewStateAdoption/:id', (req, res) => {
 
 
 
-//router.get('/usuarios', requireAuth, adminController.listarUsuarios);
-//router.delete('/usuarios/:id', requireAuth, adminController.eliminarUsuario);
-//router.put('/usuarios/:id', requireAuth, adminController.actualizarUsuario);
-//router.post('/usuarios/registrar', requireAuth, adminController.registrarUsuarios);
-//router.get('/usuarios/:id', requireAuth, adminController.obtenerUsuario);
+//router.get('/viewUsers', requireAuth, adminController.listarUsuarios);
+//router.delete('/searchUser/:id', requireAuth, adminController.eliminarUsuario);
+//router.put('/updateUser/:id', requireAuth, adminController.actualizarUsuario);
+//router.post('/createUser', requireAuth, adminController.registrarUsuarios);
+//router.get('/searchUser/:id', requireAuth, adminController.obtenerUsuario);
+//router.put('/suspendAccount/:id', requireAuth, adminController.suspenderCuenta);
+//router.get('/viewPets', requireAuth, adminController.listarMascotas);
+//router.delete('/deletePets/:id', requireAuth, adminController.eliminarMascota);
+//router.get('/viewStateAdoption', requireAuth, adminController.listarEstadoAdopcion);
+//router.get('/viewStateAdoption/:id', requireAuth, adminController.obtenerEstadoAdopcion);
 module.exports = router;
