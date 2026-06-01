@@ -5,6 +5,9 @@ const cors = require('cors');
 // Importar rutas
 const authRoutes = require('./routes/auth.routes');
 const perfilesRoutes = require('./routes/perfiles.routes');
+const adminRoutes = require('./routes/admin.routes');
+const userRoutes = require('./routes/user.routes');
+const petsRoutes = require('./routes/pets.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,7 +27,9 @@ app.get('/', (req, res) => {
 // Registro de rutas de la API
 app.use('/api/auth', authRoutes);
 app.use('/api/perfiles', perfilesRoutes);
-
+app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/pets', petsRoutes); // Rutas de mascotas
 // Middleware para capturar rutas no encontradas (404)
 app.use((req, res, next) => {
   res.status(404).json({ error: `Ruta no encontrada: ${req.originalUrl}` });
