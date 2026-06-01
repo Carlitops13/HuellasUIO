@@ -58,4 +58,5 @@ router.get('/viewStateAdoption/:id', (req, res) => {
 //router.delete('/deletePets/:id', requireAuth, adminController.eliminarMascota);
 //router.get('/viewStateAdoption', requireAuth, adminController.listarEstadoAdopcion);
 //router.get('/viewStateAdoption/:id', requireAuth, adminController.obtenerEstadoAdopcion);
+
 module.exports = router;
