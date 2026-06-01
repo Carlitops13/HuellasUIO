@@ -29,4 +29,12 @@ router.delete(`/adoptante/deleteProfile`,(req, res) => {
   res.json({ message: 'Ruta para eliminar perfil de usuario adoptante - en desarrollo' });
 });
 
+router.post('/adoptante/adoptionRequest', (req, res) => {
+  res.json({ message: 'Ruta para enviar solicitud de adopción - en desarrollo' });
+});
+
+router.get('/adoptante/viewAdoptionStatus', (req, res) => {
+  res.json({ message: 'Ruta para ver estado de solicitud de adopción - en desarrollo' });
+});
+
 module.exports = router;
