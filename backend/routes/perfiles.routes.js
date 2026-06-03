@@ -7,4 +7,4 @@ const { requireAuth } = require('../middleware/auth');
 router.get('/mi-perfil', requireAuth, perfilesController.obtenerMiPerfil);
 router.put('/mi-perfil', requireAuth, perfilesController.actualizarMiPerfil);
 
-module.exports = router;   
+module.exports = router;

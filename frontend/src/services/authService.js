@@ -1,5 +1,5 @@
 const API_URL = "http://localhost:3000/api/auth";
-const PERFILES_API_URL = "http://localhost:3000/api/perfiles";
+const PERFILES_API_URL = "http://localhost:3000/api/users";
 
 /**
  * Inicia sesión del usuario enviando credenciales al backend de Express.
@@ -140,7 +140,7 @@ export async function logoutUser(token) {
  */
 export async function getProfile(token) {
   try {
-    const response = await fetch(`${PERFILES_API_URL}/mi-perfil`, {
+    const response = await fetch(`${PERFILES_API_URL}/adoptante/viewProfile`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -165,7 +165,7 @@ export async function getProfile(token) {
  */
 export async function updateProfile(profileData, token) {
   try {
-    const response = await fetch(`${PERFILES_API_URL}/mi-perfil`, {
+    const response = await fetch(`${PERFILES_API_URL}/adoptante/updateProfile`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

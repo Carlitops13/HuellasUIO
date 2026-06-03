@@ -1,26 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/user.controller');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, authorizeRoles } = require('../middleware/auth');
 
 //mascotas
-router.get('/viewOurPets', (req, res) => {
+router.get('/viewOurPets', requireAuth, authorizeRoles("rescatista"),(req, res) => {
   res.json({ message: 'Ruta para listar mascotas del rescatista - en desarrollo' });
 });
 
-router.post('/addPet', (req, res) => {
+router.post('/addPet', requireAuth, authorizeRoles("rescatista"), (req, res) => {
   res.json({ message: 'Ruta para agregar mascota del rescatista - en desarrollo' });
 });
 
-router.delete('/deletePet/:id', (req, res) => {
+router.delete('/deletePet/:id', requireAuth, authorizeRoles("rescatista"), (req, res) => {
   res.json({ message: `Ruta para eliminar mascota del rescatista con ID ${req.params.id} - en desarrollo` });
 });
 
-router.put('/updatePet/:id', (req, res) => {
+router.put('/updatePet/:id', requireAuth, authorizeRoles("rescatista"), (req, res) => {
   res.json({ message: `Ruta para actualizar mascota del rescatista con ID ${req.params.id} - en desarrollo` });
 });
 
-router.get('/viewOurPet/:id', (req, res) => {
+router.get('/viewOurPet/:id', requireAuth, authorizeRoles("rescatista"), (req, res) => {
   res.json({ message: `Ruta para obtener mascota del rescatista con ID ${req.params.id} - en desarrollo` });
 });
 

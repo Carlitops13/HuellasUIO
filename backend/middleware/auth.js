@@ -36,4 +36,16 @@ const requireAuth = async (req, res, next) => {
   }
 };
 
-module.exports = { requireAuth };
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      console.log(req.user);
+      return res.status(403).json({
+        message: "No tienes permisos para acceder a esta ruta"
+      });
+    }
+    next();
+  };
+};
+
+module.exports = { requireAuth, authorizeRoles };
