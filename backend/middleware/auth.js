@@ -35,9 +35,17 @@ const requireAuth = async (req, res, next) => {
     });
   }
 };
-
+//FALTA COMPLETAR Y PRBAR LOGICA DEL ROL, PARA QUE SOLO LOS USUARIOS CON ROL ACCEDAN A SUS RUTAS
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
+  const [data,error] = supabase.from('usuarios').select('rol').eq('id', req.user.id).single();
+  if (error) {
+    console.error('Error obteniendo el rol del usuario:', error);
+    return res.status(500).json({
+      error: 'Error interno del servidor al verificar permisos.'
+    });
+  }else{
+    req.user.role = data.rol; // Asignamos el rol obtenido a req.user para su uso posterior    
     if (!roles.includes(req.user.role)) {
       console.log(req.user);
       return res.status(403).json({
@@ -46,6 +54,7 @@ const authorizeRoles = (...roles) => {
     }
     next();
   };
+}
 };
 
 module.exports = { requireAuth, authorizeRoles };

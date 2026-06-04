@@ -18,9 +18,9 @@ router.delete(`/rescatista/deleteProfile`,requireAuth, authorizeRoles("rescatist
 });
 
 //USUARIOS ADOPTANTES AUTENTICADOS
-router.get(`/adoptante/viewProfile`,requireAuth, authorizeRoles("adoptante"),perfilesController.obtenerMiPerfil);
+router.get(`/adoptante/viewProfile`,requireAuth,perfilesController.obtenerMiPerfil);
 
-router.put(`/adoptante/updateProfile`,requireAuth, authorizeRoles("adoptante"),perfilesController.actualizarMiPerfil);
+router.put(`/adoptante/updateProfile`,requireAuth,perfilesController.actualizarMiPerfil);
 
 router.delete(`/adoptante/deleteProfile`,requireAuth, authorizeRoles("adoptante"),(req, res) => {
   res.json({ message: 'Ruta para eliminar perfil de usuario adoptante - en desarrollo' });
