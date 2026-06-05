@@ -29,6 +29,7 @@ export default function UserProfile({ token, onLogout }) {
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
   // Cargar usuario del localStorage
+  // eslint-disable-next-line no-unused-vars
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
@@ -61,6 +62,7 @@ export default function UserProfile({ token, onLogout }) {
 
   useEffect(() => {
     if (token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchPerfil(token);
     }
   }, [token]);

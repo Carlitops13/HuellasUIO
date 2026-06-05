@@ -17,7 +17,7 @@ router.post('/update-password', requireAuth, authController.actualizarPassword);
 router.post('/recuperarClave', authController.recuperarClave);
 
 // Confirmar recuperación de contraseña
-router.post('/recuperarClave/confirm', authController.confirmarRecuperarClave);
+router.put('/recuperarClave/confirm', authController.confirmarRecuperarClave);
 
 module.exports = router;
     

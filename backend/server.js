@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 
 // Registro de rutas de la API
 app.use('/api/auth', authRoutes);
-app.use('/api/perfiles', perfilesRoutes);
+//app.use('/api/perfiles', perfilesRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/pets', petsRoutes); // Rutas de mascotas

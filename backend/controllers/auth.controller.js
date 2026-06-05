@@ -6,22 +6,21 @@ const supabase = require('../supabase');
 
  */
 const registro = async (req, res) => {
-  const { email, password, nombre_completo } = req.body;
+  const { email, password, nombre_completo} = req.body;
 
   if (!email || !password || !nombre_completo) {
     return res.status(400).json({
-      error: 'Por favor, proporciona email, password y nombre_completo.'
+      error: 'Por favor, proporciona email, password, nombre_completo y rol.'
     });
   }
 
   try {
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.toLowerCase(), // Convertimos el email a minúsculas para evitar problemas de mayúsculas/minúsculas
       password,
       options: {
-        // Guardamos nombre completo  en la  para que el trigger de Supabase lo tome
         data: {
-          full_name: nombre_completo
+          full_name: nombre_completo.toUpperCase() // Convertimos el nombre completo a mayúsculas antes de guardarlo
         }
       }
     });
@@ -56,7 +55,7 @@ const login = async (req, res) => {
 
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.toLowerCase(),
       password
     });
 
@@ -131,7 +130,7 @@ const actualizarPassword = async (req, res) => {
 
     // Iniciar sesión con el email del usuario y la contraseña antigua
     const { data: loginData, error: loginError } = await tempClient.auth.signInWithPassword({
-      email: req.user.email,
+      email: req.user.email.toLowerCase(),
       password: oldPassword
     });
 
@@ -172,7 +171,7 @@ const recuperarClave = async (req, res) => {
 
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'http://localhost:5173/'
+      redirectTo: 'http://localhost:5173/recuperarClave' // URL a la que el usuario será redirigido después de hacer clic en el enlace del correo
     });
 
     if (error) {
@@ -194,10 +193,11 @@ const recuperarClave = async (req, res) => {
  * Recibe el access_token generado por Supabase (type=recovery) y una nueva password.
  */
 const confirmarRecuperarClave = async (req, res) => {
-  const { access_token, password } = req.body;
+  // Cambiamos el nombre de la variable de 'access_token' a 'token' para alinearlo con tu frontend
+  const { token, password } = req.body; 
 
-  if (!access_token) {
-    return res.status(400).json({ error: 'Por favor, proporciona el access_token de recuperación.' });
+  if (!token) {
+    return res.status(400).json({ error: 'Por favor, proporciona el token de recuperación.' });
   }
 
   if (!password || password.length < 6) {
@@ -205,22 +205,37 @@ const confirmarRecuperarClave = async (req, res) => {
   }
 
   try {
-    // Supabase utiliza el JWT de recuperación para permitir setear una nueva clave
-    const { data, error } = await supabase.auth.exchangeCodeForSession(access_token, password);
+    // 1. Crear la sesión del usuario en Supabase usando el token de la URL
+    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+      access_token: token,
+      refresh_token: token // Se duplica el token si Supabase no envió un refresh_token por separado
+    });
 
-    // Nota: exchangeCodeForSession espera un auth code, no un access token de recovery.
-    // Como esta API puede variar según versión, intentamos el método estándar de supabase:
-    // Si falla, devolvemos el error original para que puedas ajustar.
-    if (error) {
-      return res.status(400).json({ error: error.message });
+    if (sessionError) {
+      return res.status(400).json({ error: 'El token de recuperación es inválido o ha expirado.' });
     }
 
-    return res.status(200).json({ message: 'Contraseña recuperada exitosamente.', data });
+    // 2. Ahora que el cliente de Supabase tiene la sesión activa del usuario, actualizamos su clave
+    const { data: userData, error: updateError } = await supabase.auth.updateUser({
+      password: password
+    });
+
+    if (updateError) {
+      return res.status(400).json({ error: updateError.message });
+    }
+
+    // 3. Respuesta exitosa devolviendo los datos del usuario modificado
+    return res.status(200).json({ 
+      message: 'Contraseña recuperada exitosamente.', 
+      data: userData 
+    });
+
   } catch (err) {
     console.error('Error en confirmarRecuperarClave:', err);
     return res.status(500).json({ error: 'Error interno del servidor al recuperar la contraseña.' });
   }
 };
+
 
 module.exports = {
   registro,
