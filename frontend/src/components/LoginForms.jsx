@@ -15,6 +15,7 @@ export default function LoginForms({ onLoginSuccess }) {
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [registerRol, setRegisterRol] = useState("adoptante"); 
 
   // Estados de carga, error y éxito
   const [isLoading, setIsLoading] = useState(false);
@@ -27,9 +28,7 @@ export default function LoginForms({ onLoginSuccess }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Efecto visual de entrada original
-
   useEffect(() => {
-
     const elements = document.querySelectorAll('.animate-fade-in-up');
     elements.forEach((el, index) => {
       el.style.opacity = '0';
@@ -44,12 +43,10 @@ export default function LoginForms({ onLoginSuccess }) {
 
   // Manejar el envío de Login
   const handleLoginSubmit = async (e) => {
-
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    // Validación de formato de correo electrónico
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(loginEmail)) {
       setError("Por favor, ingresa un correo electrónico válido.");
@@ -63,10 +60,13 @@ export default function LoginForms({ onLoginSuccess }) {
       setSuccess("¡Ingreso Exitoso!");
       
       if (data.session && data.session.access_token) {
+        // Guardamos el token en LocalStorage
         localStorage.setItem("token", data.session.access_token);
+        
+        
         localStorage.setItem("user", JSON.stringify(data.user));
         
-        // Notificar al componente padre de la autenticación exitosa
+        
         setTimeout(() => {
           onLoginSuccess(data.session.access_token);
         }, 1000);
@@ -87,28 +87,24 @@ export default function LoginForms({ onLoginSuccess }) {
     setError("");
     setSuccess("");
 
-    //  Validación de nombre completo: al menos un nombre y un apellido
     const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]{2,}(?:\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]{2,})+$/;
     if (!nameRegex.test(nombreCompleto.trim())) {
       setError("El nombre completo debe incluir al menos un nombre y un apellido.");
       return;
     }
 
-    //  Validación de formato de correo electrónico
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(registerEmail)) {
       setError("Por favor, ingresa un correo electrónico válido.");
       return;
     }
 
-    //  Validación de contraseña
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
     if (!passwordRegex.test(registerPassword)) {
       setError("La contraseña debe tener al menos 6 caracteres, incluir una letra mayúscula, una minúscula y un número.");
       return;
     }
 
-    //  Confirmación de contraseña
     if (registerPassword !== confirmPassword) {
       setError("Las contraseñas no coinciden.");
       return;
@@ -117,15 +113,16 @@ export default function LoginForms({ onLoginSuccess }) {
     setIsLoading(true);
 
     try {
-      await registerUser(registerEmail, registerPassword, nombreCompleto);
+      
+      await registerUser(registerEmail, registerPassword, nombreCompleto, registerRol);
       setSuccess("¡Registro Exitoso! Redirigiendo al login...");
       
       setNombreCompleto("");
       setRegisterEmail("");
       setRegisterPassword("");
       setConfirmPassword("");
+      setRegisterRol("adoptante"); 
 
-      // Deslizar de vuelta al login automáticamente
       setTimeout(() => {
         setIsRegister(false);
         setSuccess("");
@@ -139,20 +136,17 @@ export default function LoginForms({ onLoginSuccess }) {
 
   return (
     <div className="bg-[#fdf9f4] text-[#1c1c19] min-h-screen flex flex-col overflow-x-hidden selection:bg-[#ffdad3]">
-      {/* Estilos del slider embebidos directamente en el componente */}
       <style>{`
         .card-slider-container {
           width: 100%;
           overflow: hidden;
           position: relative;
         }
-
         .card-slider-wrapper {
           display: flex;
           width: 200%;
           transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
         }
-
         .card-slider-pane {
           width: 50%;
           flex-shrink: 0;
@@ -185,7 +179,7 @@ export default function LoginForms({ onLoginSuccess }) {
       <main className="flex-1">
         <section className="flex flex-col md:flex-row overflow-hidden min-h-[calc(100vh-64px)]">
           
-          {/* LADO IZQUIERDO: Tarjeta de Autenticación con deslizamiento interno */}
+          {/* LADO IZQUIERDO: Tarjeta de Autenticación */}
           <div className="w-full md:w-1/2 flex items-center justify-center p-6 bg-[#ffffff] relative z-10">
             <div className="max-w-md w-full animate-fade-in-up bg-white/50 rounded-3xl shadow-xl shadow-[#9d3d2c]/5 border border-[#ddc0bb]/30 overflow-hidden">
               <div className="card-slider-container">
@@ -377,6 +371,26 @@ export default function LoginForms({ onLoginSuccess }) {
                             />
                           </div>
                         </div>
+
+                        
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-[#56423e] ml-1" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>Tipo de Cuenta / Rol</label>
+                          <div className="relative group">
+                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#89726d] group-focus-within:text-[#9d3d2c] transition-colors text-lg">badge</span>
+                            <select
+                              className="w-full pl-11 pr-4 py-2 bg-[#f7f3ee] rounded-xl border border-[#ddc0bb] focus:border-[#9d3d2c] focus:ring-4 focus:ring-[#9d3d2c]/10 transition-all text-[#1c1c19] outline-none text-sm appearance-none cursor-pointer"
+                              value={registerRol}
+                              onChange={(e) => setRegisterRol(e.target.value)}
+                              style={{ fontFamily: "'Nunito Sans', sans-serif" }}
+                            >
+                              <option value="adoptante">Adoptante (Quiero buscar una mascota)</option>
+                              <option value="rescatista">Rescatista (Quiero dar en adopción)</option>
+                            </select>
+                            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#89726d] pointer-events-none">arrow_drop_down</span>
+                          </div>
+                        </div>
+                        {/* ========================================== */}
+
                         <div className="space-y-1">
                           <label className="text-xs font-bold text-[#56423e] ml-1" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>Contraseña</label>
                           <div className="relative group">
@@ -444,7 +458,6 @@ export default function LoginForms({ onLoginSuccess }) {
           <div className="w-full md:w-1/2 min-h-[400px] md:min-h-full relative overflow-hidden bg-[#9d3d2c] flex items-center justify-center">
             <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-[#bd5541]/30 rounded-full blur-[100px]"></div>
             <div className="absolute bottom-[-5%] left-[20%] w-[300px] h-[300px] bg-[#c7aa16]/20 rounded-full blur-[80px]"></div>
-
             <div className="absolute inset-y-0 left-0 w-24 bg-white hidden md:block" style={{ clipPath: "polygon(0 0, 100% 0, 40% 10%, 100% 25%, 30% 45%, 100% 65%, 45% 85%, 100% 100%, 0 100%)" }}></div>
 
             <div className="relative h-full flex flex-col items-center justify-center text-center p-8 text-[#fffbff] z-20">
@@ -476,13 +489,11 @@ export default function LoginForms({ onLoginSuccess }) {
               <div className="mt-8 pt-4 border-t border-white/10 w-full max-w-xs" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
                 <p className="text-[10px] font-bold text-white/70 mb-3">{isRegister ? "o inicia sesión con" : "o regístrate con"}</p>
                 <div className="flex justify-center gap-4">
-                  {/* Google */}
                   <button type="button" className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all text-white border border-white/20">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                       <path d="M12.24 10.285V13.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l2.427-2.334C17.955 1.192 15.34 0 12.24 0 5.58 0 0 5.37 0 12s5.58 12 12.24 12c6.96 0 11.57-4.89 11.57-11.79 0-.795-.085-1.4-.19-1.925H12.24z"/>
                     </svg>
                   </button>
-                  {/* Facebook */}
                   <button type="button" className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all text-white border border-white/20">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>

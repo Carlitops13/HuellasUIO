@@ -80,10 +80,7 @@ export async function loginUser(email, password) {
   }
 }
 
-/**
- * Registra un nuevo usuario enviando datos al backend de Express.
- */
-export async function registerUser(email, password, nombreCompleto) {
+export async function registerUser(email, password, nombreCompleto, rol) {
   try {
     const response = await fetch(`${API_URL}/register`, {
       method: "POST",
@@ -91,9 +88,10 @@ export async function registerUser(email, password, nombreCompleto) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email,
-        password,
+        email: email,
+        password: password,
         nombre_completo: nombreCompleto,
+        rol: rol, // <-- Aquí nos aseguramos de que viaje el rol seleccionado ('adoptante' o 'rescatista')
       }),
     });
 
