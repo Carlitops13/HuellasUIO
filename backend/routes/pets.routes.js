@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/user.controller');
 const { requireAuth, authorizeRoles } = require('../middleware/auth');
 
 //mascotas

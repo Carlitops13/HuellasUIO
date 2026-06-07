@@ -15,6 +15,7 @@ const obtenerMiPerfil = async (req, res) => {
         const profileData = {
           id: req.user.id,
           nombre_completo: req.user.user_metadata?.full_name || '',
+          rol: req.user.user_metadata?.rol || 'adoptante',
           telefono: '',
           direccion: '',
           perfil_completado: false
@@ -30,7 +31,7 @@ const obtenerMiPerfil = async (req, res) => {
 
         if (insertError) {
           console.warn('Error al insertar perfil con admin, intentando con cliente autenticado:', insertError.message);
-          // Intentar con el cliente autenticado de la request como alternativa
+
           const { data: nuevoPerfilAuth, error: insertErrorAuth } = await req.supabase
             .from('perfiles')
             .insert(profileData)
@@ -49,6 +50,23 @@ const obtenerMiPerfil = async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
+    // Sincronizar rol si en la base de datos es adoptante pero en auth metadata es diferente (ej. rescatista o admin)
+    const metadataRol = req.user.user_metadata?.rol;
+    if (perfil && metadataRol && perfil.rol !== metadataRol) {
+      console.log(`Sincronizando rol en BD para el usuario ${req.user.id}: ${perfil.rol} -> ${metadataRol}`);
+      const dbClient = supabase.admin || req.supabase;
+      const { data: perfilActualizado, error: updateError } = await dbClient
+        .from('perfiles')
+        .update({ rol: metadataRol })
+        .eq('id', req.user.id)
+        .select()
+        .single();
+
+      if (!updateError && perfilActualizado) {
+        return res.status(200).json(perfilActualizado);
+      }
+    }
+
     return res.status(200).json(perfil);
   } catch (err) {
     console.error('Error al obtener perfil:', err);
@@ -60,7 +78,7 @@ const actualizarMiPerfil = async (req, res) => {
   const { nombre_completo, telefono, direccion, nombre_organizacion } = req.body;
 
   try {
-    // RLS de Supabase asegura que solo el propio usuario pueda actualizar su perfil (id = auth.uid())
+    // Solo el propio usuario pueda actualizar su perfil 
     const { data: perfilActualizado, error } = await req.supabase
       .from('perfiles')
       .update({

@@ -1,6 +1,6 @@
 const supabase = require('../supabase');
 
-//Token de Supabase, para que respete RLS en la base de datos
+//Middleware para autenticación de usuarios que utilizan el token de Supabase
 const requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -37,24 +37,66 @@ const requireAuth = async (req, res, next) => {
 };
 //FALTA COMPLETAR Y PRBAR LOGICA DEL ROL, PARA QUE SOLO LOS USUARIOS CON ROL ACCEDAN A SUS RUTAS
 const authorizeRoles = (...roles) => {
-  return (req, res, next) => {
-  const [data,error] = supabase.from('usuarios').select('rol').eq('id', req.user.id).single();
-  if (error) {
-    console.error('Error obteniendo el rol del usuario:', error);
-    return res.status(500).json({
-      error: 'Error interno del servidor al verificar permisos.'
-    });
-  }else{
-    req.user.role = data.rol; // Asignamos el rol obtenido a req.user para su uso posterior    
-    if (!roles.includes(req.user.role)) {
-      console.log(req.user);
-      return res.status(403).json({
-        message: "No tienes permisos para acceder a esta ruta"
+  return async (req, res, next) => {
+    try {
+      const dbClient = req.supabase || supabase;
+      const { data, error } = await dbClient
+        .from('perfiles')
+        .select('rol')
+        .eq('id', req.user.id)
+        .single();
+
+      if (error) {
+        console.error('Error obteniendo el rol del usuario:', error);
+        return res.status(500).json({
+          error: 'Error interno del servidor al verificar permisos.'
+        });
+      }
+
+      if (!data || !data.rol) {
+        return res.status(403).json({
+          error: 'No se encontró un rol asignado para este usuario.'
+        });
+      }
+
+      let currentRol = data.rol;
+
+      // Sincronizar la metadata de Auth y la tabla perfiles
+      const metadataRol = req.user.user_metadata?.rol;
+      if (metadataRol && currentRol !== metadataRol) {
+        console.log(`[Middleware] Sincronizando rol en BD: ${currentRol} -> ${metadataRol}`);
+        const adminClient = supabase.admin || dbClient;
+        const { data: updatedProfile, error: updateError } = await adminClient
+          .from('perfiles')
+          .update({ rol: metadataRol })
+          .eq('id', req.user.id)
+          .select('rol')
+          .single();
+
+        if (!updateError && updatedProfile) {
+          currentRol = updatedProfile.rol;
+        }
+      }
+
+      req.user.role = currentRol; // Asignamos el rol obtenido a req.user
+
+      // Mapeamos 'admin' a 'admin_fundacion' para compatibilidad con las rutas y base de datos
+      const requiredRoles = roles.map(r => r === 'admin' ? 'admin_fundacion' : r);
+
+      if (!requiredRoles.includes(req.user.role)) {
+        return res.status(403).json({
+          error: 'No tienes permisos para acceder a esta ruta.'
+        });
+      }
+
+      next();
+    } catch (err) {
+      console.error('Excepción al autorizar rol:', err);
+      return res.status(500).json({
+        error: 'Error interno del servidor al procesar la autorización.'
       });
     }
-    next();
   };
-}
 };
 
 module.exports = { requireAuth, authorizeRoles };
