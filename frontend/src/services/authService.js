@@ -1,7 +1,6 @@
-const API_URL = "http://localhost:3000/api/auth";
-const PERFILES_API_URL = "http://localhost:3000/api/users";
-
-/**
+const BaseURL=import.meta.env.VITE_BASE_URL_PRODUCCION || 'https://huellas-uio.vercel.app/_/backend'; // Cambia esto según tu configuración de desarrollo/producción
+const API_URL = `${BaseURL}/api/auth`;
+const PERFILES_API_URL = `${BaseURL}/api/users`;/**
  * Inicia sesión del usuario enviando credenciales al backend de Express.
  */
 export async function confirmRecoverPassword(accessToken, password) {

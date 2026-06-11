@@ -178,10 +178,13 @@ const recuperarClave = async (req, res) => {
       error: 'Por favor, proporciona el email.'
     });
   }
+  const urlEmail = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:5173/recuperarClave'
+  : 'https://huellas-uio.vercel.app/recuperarClave';
 
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'http://localhost:5173/recuperarClave' // URL a la que el usuario será redirigido después de hacer clic en el enlace del correo
+      redirectTo: urlEmail // URL a la que el usuario será redirigido después de hacer clic en el enlace del correo
     });
 
     if (error) {
