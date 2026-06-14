@@ -17,7 +17,7 @@ app.use(cors()); // Permite peticiones desde el frontend (Vite)
 app.use(express.json()); // Permite procesar cuerpos en formato JSON
 
 // Ruta de diagnóstico inicial
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.json({
     status: 'online',
     message: 'Backend de HuellasUIO conectado a Supabase en ejecución'
