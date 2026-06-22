@@ -3,60 +3,23 @@ const router = express.Router();
 const adminController = require('../controllers/admin.controller');
 const { requireAuth, authorizeRoles } = require('../middleware/auth');
 
-//usuarios
-router.get('/viewUsers', requireAuth, authorizeRoles('admin'), (req, res) => {
-  res.json({ message: 'Ruta para listar usuarios y tipo de cuenta - en desarrollo' });
-});
+// Todas las rutas de administración requieren autenticación y rol de administrador
+const adminAuth = [requireAuth, authorizeRoles('admin_fundacion')];
 
-router.delete('/deleteUser/:id', requireAuth, authorizeRoles('admin'), (req, res) => {
-  res.json({ message: `Ruta para eliminar usuario con ID ${req.params.id} - en desarrollo` });
-});
+// Gestión de Usuarios
+router.get('/viewUsers', adminAuth, adminController.viewUsers);
+router.get('/searchUser/:id', adminAuth, adminController.searchUser);
+router.post('/createUser', adminAuth, adminController.createUser);
+router.put('/updateUser/:id', adminAuth, adminController.updateUser);
+router.delete('/deleteUser/:id', adminAuth, adminController.deleteUser);
+router.put('/suspendAccount/:id', adminAuth, adminController.suspendAccount);
 
-router.put('/updateUser/:id', requireAuth, authorizeRoles('admin'), (req, res) => {
-  res.json({ message: `Ruta para actualizar usuario con ID ${req.params.id} - en desarrollo` });
-});
+// Gestión de Mascotas
+router.get('/viewPets', adminAuth, adminController.viewPets);
+router.delete('/deletePets/:id', adminAuth, adminController.deletePets);
 
-router.post('/createUser', requireAuth, authorizeRoles('admin'), (req, res) => {
-  res.json({ message: 'Ruta para registrar usuario - en desarrollo' });
-});
-
-router.get('/searchUser/:id', requireAuth, authorizeRoles('admin'), (req, res) => {
-  res.json({ message: `Ruta para obtener usuario con ID ${req.params.id} - en desarrollo` });
-});
-
-router.put('/suspendAccount/:id', requireAuth, authorizeRoles('admin'), (req, res) => {
-  res.json({ message: `Ruta para suspender cuenta de usuario con ID ${req.params.id} - en desarrollo` });
-});
-
-//mascotas
-router.get('/viewPets', requireAuth, authorizeRoles('admin'), (req, res) => {
-  res.json({ message: 'Ruta para listar mascotas - en desarrollo' });
-});
-
-router.delete('/deletePets/:id', requireAuth, authorizeRoles('admin'), (req, res) => {
-  res.json({ message: `Ruta para eliminar mascota con ID ${req.params.id} - en desarrollo` });
-});
-
-router.get('/viewStateAdoption', requireAuth, authorizeRoles('admin'), (req, res) => {
-  res.json({ message: 'Ruta para listar estado de adopción - en desarrollo' });
-});
-
-router.get('/viewStateAdoption/:id', requireAuth, authorizeRoles('admin'), (req, res) => {
-  res.json({ message: `Ruta para obtener estado de adopción con ID ${req.params.id} - en desarrollo` });
-});
-
-
-
-
-//router.get('/viewUsers', requireAuth, adminController.listarUsuarios);
-//router.delete('/searchUser/:id', requireAuth, adminController.eliminarUsuario);
-//router.put('/updateUser/:id', requireAuth, adminController.actualizarUsuario);
-//router.post('/createUser', requireAuth, adminController.registrarUsuarios);
-//router.get('/searchUser/:id', requireAuth, adminController.obtenerUsuario);
-//router.put('/suspendAccount/:id', requireAuth, adminController.suspenderCuenta);
-//router.get('/viewPets', requireAuth, adminController.listarMascotas);
-//router.delete('/deletePets/:id', requireAuth, adminController.eliminarMascota);
-//router.get('/viewStateAdoption', requireAuth, adminController.listarEstadoAdopcion);
-//router.get('/viewStateAdoption/:id', requireAuth, adminController.obtenerEstadoAdopcion);
+// Gestión y Auditoría de Adopciones
+router.get('/viewStateAdoption', adminAuth, adminController.viewStateAdoption);
+router.get('/viewStateAdoption/:id', adminAuth, adminController.viewStateAdoptionById);
 
 module.exports = router;

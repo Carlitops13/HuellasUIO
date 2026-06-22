@@ -36,6 +36,7 @@ function App() {
               <UserProfile 
                 token={token} 
                 onLogout={handleLogout} 
+                onVolver={() => setVistaActual("dashboard")}
               />
             )
           ) : (

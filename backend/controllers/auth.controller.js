@@ -6,7 +6,7 @@ const supabase = require('../supabase');
 
  */
 const registro = async (req, res) => {
-  const { email, password, nombre_completo, rol } = req.body;
+  const { email, password, nombre_completo, rol } = req.body || {};
 
   if (!email || !password || !nombre_completo) {
     return res.status(400).json({
@@ -55,7 +55,7 @@ const registro = async (req, res) => {
  * Retorna los datos de sesión (incluyendo access_token y refresh_token).
  */
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
 
   if (!email || !password) {
     return res.status(400).json({
@@ -112,7 +112,7 @@ const logout = async (req, res) => {
  * Actualiza la contraseña del usuario en Supabase Auth.
  */
 const actualizarPassword = async (req, res) => {
-  const { oldPassword, password } = req.body;
+  const { oldPassword, password } = req.body || {};
 
   if (!oldPassword) {
     return res.status(400).json({
@@ -171,7 +171,7 @@ const actualizarPassword = async (req, res) => {
  * Envia un correo con el flujo de reset password de Supabase.
  */
 const recuperarClave = async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body || {};
 
   if (!email) {
     return res.status(400).json({
@@ -204,7 +204,7 @@ const recuperarClave = async (req, res) => {
 //confirmar recuperacion de clave|
 const confirmarRecuperarClave = async (req, res) => {
 
-  const { token, password } = req.body;
+  const { token, password } = req.body || {};
 
   if (!token) {
     return res.status(400).json({ error: 'Por favor, proporciona el token de recuperación.' });

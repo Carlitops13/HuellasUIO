@@ -75,7 +75,7 @@ const obtenerMiPerfil = async (req, res) => {
 };
 
 const actualizarMiPerfil = async (req, res) => {
-  const { nombre_completo, telefono, direccion, nombre_organizacion } = req.body;
+  const { nombre_completo, telefono, direccion, nombre_organizacion } = req.body || {};
 
   try {
     // Solo el propio usuario pueda actualizar su perfil 
