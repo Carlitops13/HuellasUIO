@@ -22,9 +22,7 @@ router.get(`/adoptante/viewProfile`,requireAuth,perfilesController.obtenerMiPerf
 
 router.put(`/adoptante/updateProfile`,requireAuth,perfilesController.actualizarMiPerfil);
 
-router.delete(`/adoptante/deleteProfile`,requireAuth, authorizeRoles("adoptante"),(req, res) => {
-  res.json({ message: 'Ruta para eliminar perfil de usuario adoptante - en desarrollo' });
-});
+router.delete(`/adoptante/deleteProfile`,requireAuth, authorizeRoles("adoptante"),userController.eliminarPerfilAdoptante);
 
 router.post('/adoptante/adoptionRequest', requireAuth, authorizeRoles("adoptante"), (req, res) => {
   res.json({ message: 'Ruta para enviar solicitud de adopción - en desarrollo' });
