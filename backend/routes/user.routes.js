@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user.controller');
 const perfilesController = require('../controllers/perfiles.controller');
+const chatController = require('../controllers/chat.controller');
 const { requireAuth, authorizeRoles } = require('../middleware/auth');
 
 // ================= RUTAS PARA USUARIOS RESCATISTAS =================
@@ -32,12 +33,10 @@ router.put('/adoptante/updateProfile', requireAuth, authorizeRoles("adoptante"),
 
 router.delete(`/adoptante/deleteProfile`,requireAuth, authorizeRoles("adoptante"),userController.eliminarMiPerfil);
 
-router.post('/adoptante/adoptionRequest', requireAuth, authorizeRoles("adoptante"), (req, res) => {
-  res.json({ message: 'Ruta para enviar solicitud de adopción - en desarrollo' });
-});
+router.post('/adoptante/adoptionRequest', requireAuth, authorizeRoles("adoptante"),userController.postularAdopcion);
 
-router.get('/adoptante/viewAdoptionStatus', requireAuth, authorizeRoles("adoptante"), (req, res) => {
-  res.json({ message: 'Ruta para ver estado de solicitud de adopción - en desarrollo' });
-});
+router.get('/adoptante/viewAdoptionStatus', requireAuth, authorizeRoles("adoptante"), userController.verEstadoPostulaciones);
+
+router.get('/adoptante/myAdoptionRequests', requireAuth, authorizeRoles("adoptante"), userController.verMisSolicitudes);
 
 module.exports = router;
