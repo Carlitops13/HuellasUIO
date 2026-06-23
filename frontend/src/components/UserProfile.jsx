@@ -31,10 +31,10 @@ export default function UserProfile({ token, onLogout, onVolver }) {
   // eslint-disable-next-line no-unused-vars
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
-  // Cargar usuario del localStorage
+  // Cargar usuario del sessionStorage
   // eslint-disable-next-line no-unused-vars
   const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = sessionStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
@@ -192,8 +192,8 @@ export default function UserProfile({ token, onLogout, onVolver }) {
     } catch (err) {
       console.warn("Cerrando sesión localmente tras fallo de servidor:", err);
     } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
       onLogout(); 
       setIsLoading(false);
     }

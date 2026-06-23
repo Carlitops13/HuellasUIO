@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { getAllPets, getOurPets, addPet, deletePet, uploadMascotaImage } from '../services/mascotaService';
 import { getSolicitudesRecibidas, responderSolicitudAdopcion, postularAdopcion, getMisSolicitudes } from '../services/authService';
 import { getAllUsers, createUserAdmin, updateUserAdmin, deleteUserAdmin, toggleSuspendUserAdmin } from '../services/adminService';
@@ -64,7 +64,7 @@ const mapearSolicitudRecibidaAPI = (sol) => ({
 export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
   // --- ESTADOS DE CONTROL GENERAL ---
   const [nombreUsuario, setNombreUsuario] = useState('Usuario');
-  const [rolUsuario, setRolUsuario] = useState('adoptante'); 
+  const [rolUsuario, setRolUsuario] = useState(''); 
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
   const [seccionActiva, setSeccionActiva] = useState('inicio');
   const [loading, setLoading] = useState(false);
@@ -139,6 +139,7 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
       if (datosUsuario) {
         const userObj = datosUsuario.user || datosUsuario;
         const name = userObj?.user_metadata?.nombre || userObj?.user_metadata?.full_name || userObj?.nombre || userObj?.email;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (name) setNombreUsuario(name);
 
         const rolDetectado = userObj?.user_metadata?.rol || userObj?.user_metadata?.role || userObj?.rol || userObj?.role || datosUsuario?.rol;
@@ -206,7 +207,9 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     cargarDatos();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, rolUsuario, seccionActiva]);
 
   // FILTRADO GLOBAL (Usando enums del backend)

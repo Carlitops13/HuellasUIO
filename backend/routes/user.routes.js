@@ -30,13 +30,14 @@ router.get('/adoptante/viewProfile', requireAuth, authorizeRoles("adoptante"), p
 // Actualizar perfil de adoptante
 router.put('/adoptante/updateProfile', requireAuth, authorizeRoles("adoptante"), perfilesController.actualizarMiPerfil);
 
-// Eliminar perfil de adoptante
-router.delete('/adoptante/deleteProfile', requireAuth, authorizeRoles("adoptante"), userController.eliminarMiPerfil);
+router.delete(`/adoptante/deleteProfile`,requireAuth, authorizeRoles("adoptante"),userController.eliminarMiPerfil);
 
-// Postular a una adopción
-router.post('/adoptante/adoptionRequest', requireAuth, authorizeRoles("adoptante"), userController.postularAdopcion);
+router.post('/adoptante/adoptionRequest', requireAuth, authorizeRoles("adoptante"), (req, res) => {
+  res.json({ message: 'Ruta para enviar solicitud de adopción - en desarrollo' });
+});
 
-// Ver estado de sus solicitudes enviadas
-router.get('/adoptante/viewAdoptionStatus', requireAuth, authorizeRoles("adoptante"), userController.verMisSolicitudes);
+router.get('/adoptante/viewAdoptionStatus', requireAuth, authorizeRoles("adoptante"), (req, res) => {
+  res.json({ message: 'Ruta para ver estado de solicitud de adopción - en desarrollo' });
+});
 
 module.exports = router;
