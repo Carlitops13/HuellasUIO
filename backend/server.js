@@ -16,6 +16,13 @@ const PORT = process.env.PORT || 3000;
 app.use(cors()); // Permite peticiones desde el frontend (Vite)
 app.use(express.json()); // Permite procesar cuerpos en formato JSON
 
+// Ruta raíz
+app.get('/', (req, res) => {
+  res.json({
+    message: "Servidor de Huellas UIO activo. Accede a /api para el estado de diagnóstico."
+  });
+});
+
 // Ruta de diagnóstico inicial
 app.get('/api', (req, res) => {
   res.json({

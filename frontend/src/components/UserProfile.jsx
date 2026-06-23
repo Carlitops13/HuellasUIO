@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getProfile, updateProfile, updatePassword, logoutUser } from "../services/authService";
 import maxImage from "../assets/max.webp";
 
-export default function UserProfile({ token, onLogout }) {
+export default function UserProfile({ token, onLogout, onVolver }) {
   // Estados del Perfil del Usuario
   const [perfil, setPerfil] = useState(null);
   const [telefono, setTelefono] = useState("");
@@ -207,11 +207,26 @@ export default function UserProfile({ token, onLogout }) {
       {/* Cabecera */}
       <header className="bg-[#fdf9f4]/90 backdrop-blur-md shadow-sm shadow-[#9d3d2c]/5 top-0 z-50 sticky">
         <div className="flex justify-between items-center w-full px-5 md:px-16 max-w-[1280px] mx-auto h-16">
-          <div className="text-2xl md:text-3xl text-[#9d3d2c] tracking-tight font-bold" style={{ fontFamily: "'Quicksand', sans-serif" }}>
-            Huellas UIO
+          <div className="flex items-center gap-3">
+            {!isProfilePending && (
+              <button 
+                onClick={onVolver}
+                className="flex items-center justify-center p-1.5 rounded-full border border-[#ddc0bb]/30 bg-white hover:bg-[#f7f3ee] text-[#9d3d2c] hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer"
+                title="Volver a ver mascotas"
+              >
+                <span className="material-symbols-outlined text-xl">arrow_back</span>
+              </button>
+            )}
+            <div 
+              className={`text-2xl md:text-3xl text-[#9d3d2c] tracking-tight font-bold ${!isProfilePending ? 'cursor-pointer' : ''}`}
+              style={{ fontFamily: "'Quicksand', sans-serif" }}
+              onClick={!isProfilePending ? onVolver : undefined}
+            >
+              Huellas UIO
+            </div>
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Encuentra una mascota</a>
+            <button onClick={!isProfilePending ? onVolver : undefined} className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm bg-transparent border-0 cursor-pointer" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>Encuentra una mascota</button>
             <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Como funciona</a>
             <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Nuestros refugios</a>
             <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Historias</a>
@@ -406,6 +421,13 @@ export default function UserProfile({ token, onLogout }) {
                     <button onClick={handleLogoutClick} disabled={isLoading} className="w-full py-3 bg-gradient-to-r from-[#9d3d2c] to-[#bd5541] text-white rounded-full font-bold shadow-lg shadow-[#9d3d2c]/30 hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-xs mt-2">
                       {isLoading ? "Cerrando sesión..." : "CERRAR SESIÓN"}
                       <span className="material-symbols-outlined text-sm">logout</span>
+                    </button>
+                    <button 
+                      onClick={onVolver}
+                      className="w-full py-3 bg-[#9d3d2c]/10 text-[#9d3d2c] hover:bg-[#9d3d2c]/20 rounded-full font-bold transition-all flex items-center justify-center gap-2 text-xs mt-1 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-sm">pets</span>
+                      VOLVER AL CATÁLOGO
                     </button>
                   </div>
                 </div>

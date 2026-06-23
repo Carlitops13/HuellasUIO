@@ -1,37 +1,46 @@
 import { useState } from "react";
 import LoginForms from "./components/LoginForms.jsx";
 import UserProfile from "./components/UserProfile.jsx";
-import {Routes, Route} from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import DashboardForm from './components/DashboardForm.jsx'; 
 import "./App.css";
 
 import RecuperarClave from "./components/RecuperarClave.jsx";
 
 function App() {
-  // Estado del token para controlar si el usuario está autenticado
   const [token, setToken] = useState(() => localStorage.getItem("token") || "");
+  const [vistaActual, setVistaActual] = useState("dashboard");
 
   const handleLoginSuccess = (newToken) => {
     setToken(newToken);
+    setVistaActual("dashboard");
   };
 
   const handleLogout = () => {
     setToken("");
   };
-  console.log("Token en App.jsx:", token);
+
   return (
     <Routes>
       <Route
         path="/"
         element={
           token ? (
-            <UserProfile
-              token={token}
-              onLogout={handleLogout}
-            />
+            vistaActual === "dashboard" ? (
+              <DashboardForm 
+                token={token} 
+                onLogout={handleLogout} 
+                onIrAPerfil={() => setVistaActual("perfil")} 
+              />
+            ) : (
+              <UserProfile 
+                token={token} 
+                onLogout={handleLogout} 
+                onVolver={() => setVistaActual("dashboard")}
+              />
+            )
           ) : (
-            <LoginForms
-              onLoginSuccess={handleLoginSuccess}
-            />
+            <LoginForms onLoginSuccess={handleLoginSuccess} />
           )
         }
       />
@@ -41,7 +50,7 @@ function App() {
         element={<RecuperarClave />}
       />
     </Routes>
-);
+  );
 }
 
 export default App;

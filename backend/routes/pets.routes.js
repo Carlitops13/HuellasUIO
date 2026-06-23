@@ -1,35 +1,29 @@
 const express = require('express');
 const router = express.Router();
+const petsController = require('../controllers/pets.controller');
 const { requireAuth, authorizeRoles } = require('../middleware/auth');
+const multer = require('multer');
 
-//mascotas
-router.get('/viewOurPets', requireAuth, authorizeRoles("rescatista"),(req, res) => {
-  res.json({ message: 'Ruta para listar mascotas del rescatista - en desarrollo' });
+// Configuración de multer para subir archivos en memoria
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // Máximo 5MB
+  }
 });
 
-router.post('/addPet', requireAuth, authorizeRoles("rescatista"), (req, res) => {
-  res.json({ message: 'Ruta para agregar mascota del rescatista - en desarrollo' });
-});
+// Rutas privadas para Rescatistas
+router.get('/viewOurPets', requireAuth, authorizeRoles("rescatista"), petsController.viewOurPets);
+router.post('/addPet', requireAuth, authorizeRoles("rescatista"), petsController.addPet);
+router.delete('/deletePet/:id', requireAuth, authorizeRoles("rescatista"), petsController.deletePet);
+router.put('/updatePet/:id', requireAuth, authorizeRoles("rescatista"), petsController.updatePet);
+router.get('/viewOurPet/:id', requireAuth, authorizeRoles("rescatista"), petsController.viewOurPet);
 
-router.delete('/deletePet/:id', requireAuth, authorizeRoles("rescatista"), (req, res) => {
-  res.json({ message: `Ruta para eliminar mascota del rescatista con ID ${req.params.id} - en desarrollo` });
-});
+// Subida de foto de mascota (solo rescatistas)
+router.post('/upload', requireAuth, authorizeRoles("rescatista"), upload.single('imagen'), petsController.uploadPetImage);
 
-router.put('/updatePet/:id', requireAuth, authorizeRoles("rescatista"), (req, res) => {
-  res.json({ message: `Ruta para actualizar mascota del rescatista con ID ${req.params.id} - en desarrollo` });
-});
-
-router.get('/viewOurPet/:id', requireAuth, authorizeRoles("rescatista"), (req, res) => {
-  res.json({ message: `Ruta para obtener mascota del rescatista con ID ${req.params.id} - en desarrollo` });
-});
-
-//mascotas
-router.get('/viewAllPets', (req, res) => {
-  res.json({ message: 'Ruta para listar todas las mascotas - en desarrollo' });
-});
-
-router.get('/viewAllPet/:id', (req, res) => {
-  res.json({ message: `Ruta para obtener mascota con ID ${req.params.id} - en desarrollo` });
-});
+// Rutas Públicas
+router.get('/viewAllPets', petsController.viewAllPets);
+router.get('/viewAllPet/:id', petsController.viewAllPet);
 
 module.exports = router;
