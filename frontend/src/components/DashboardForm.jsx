@@ -64,7 +64,7 @@ const mapearSolicitudRecibidaAPI = (sol) => ({
 export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
   // --- ESTADOS DE CONTROL GENERAL ---
   const [nombreUsuario, setNombreUsuario] = useState('Usuario');
-  const [rolUsuario, setRolUsuario] = useState('adoptante'); 
+  const [rolUsuario, setRolUsuario] = useState(''); 
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
   const [seccionActiva, setSeccionActiva] = useState('inicio');
   const [loading, setLoading] = useState(false);
