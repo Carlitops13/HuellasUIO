@@ -8,7 +8,7 @@ import "./App.css";
 import RecuperarClave from "./components/RecuperarClave.jsx";
 
 function App() {
-  const [token, setToken] = useState(() => localStorage.getItem("token") || "");
+  const [token, setToken] = useState(() => sessionStorage.getItem("token") || "");
   const [vistaActual, setVistaActual] = useState("dashboard");
 
   const handleLoginSuccess = (newToken) => {

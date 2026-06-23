@@ -60,11 +60,11 @@ export default function LoginForms({ onLoginSuccess }) {
       setSuccess("¡Ingreso Exitoso!");
       
       if (data.session && data.session.access_token) {
-        // Guardamos el token en LocalStorage
-        localStorage.setItem("token", data.session.access_token);
+        // Guardamos el token en sessionStorage
+        sessionStorage.setItem("token", data.session.access_token);
         
         
-        localStorage.setItem("user", JSON.stringify(data.user));
+        sessionStorage.setItem("user", JSON.stringify(data.user));
         
         
         setTimeout(() => {
