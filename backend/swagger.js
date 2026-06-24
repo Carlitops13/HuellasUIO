@@ -196,30 +196,55 @@ const swaggerSpec = swaggerJSDoc({
 // ... Todo tu objeto manualPaths y swaggerSpec se mantiene igual que antes ...
 
 function setupSwagger(app) {
-  // 1. Servir el JSON del spec directamente por si quieres consumirlo externamente
+  // 1. Endpoint que expone tu JSON de especificaciones de forma estática
   app.get('/api-docs/json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    res.send(swaggerSpec);
+    res.json(swaggerSpec);
   });
 
-  // 2. Servir la interfaz UI configurando los paths de forma absoluta para Vercel
-  app.use(
-    '/api-docs',
-    swaggerUi.serveFiles(swaggerSpec, {
-      swaggerOptions: {
-        url: '/_/backend/api-docs/json' // Apunta al endpoint JSON que creamos arriba
-      }
-    }),
-    (req, res) => {
-      // Forzamos a swaggerUi a generar el HTML usando el Spec correcto
-      const html = swaggerUi.generateHTML(swaggerSpec, {
-        swaggerOptions: {
-          url: '/_/backend/api-docs/json'
-        }
-      });
-      res.send(html);
-    }
-  );
+  // 2. Renderizado manual del HTML usando recursos estáticos externos (CDN)
+  // De esta manera Vercel no se confunde con rutas internas ni archivos locales
+  app.get('/api-docs', (req, res) => {
+    const html = `
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <title>Huellas UIO API Docs</title>
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.css" />
+        <style>
+          html { box-sizing: border-box; overflow: -webkit-scrollbar; }
+          *, *:before, *:after { box-sizing: inherit; }
+          body { margin:0; background: #fafafa; }
+        </style>
+      </head>
+      <body>
+        <div id="swagger-ui"></div>
+        <script src="https://cloudflare.com"></script>
+        <script src="https://cloudflare.com"></script>
+        <script>
+          window.onload = function() {
+            window.ui = SwaggerUIBundle({
+              url: "/_/backend/api-docs/json", // Consume directo el JSON de tu backend
+              dom_id: '#swagger-ui',
+              deepLinking: true,
+              presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+              ],
+              plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+              ],
+              layout: "BaseLayout"
+            });
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  });
 }
 
 module.exports = { setupSwagger };
