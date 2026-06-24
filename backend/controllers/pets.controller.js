@@ -193,6 +193,7 @@ const viewAllPets = async (req, res) => {
     const { data: mascotas, error } = await supabase
       .from('mascotas')
       .select('*')
+      .eq('estado_adopcion', 'disponible')
       .order('creado_el', { ascending: false });
 
     if (error) {

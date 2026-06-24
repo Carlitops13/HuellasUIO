@@ -176,6 +176,7 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
 
         // Cargar las solicitudes de adopción recibidas
         const solicitudesData = await getSolicitudesRecibidas(token);
+        console.log("Solicitudes recibidas:", solicitudesData);
         setSolicitudesRecibidas(solicitudesData.map(mapearSolicitudRecibidaAPI));
       } else if (rolUsuario === 'adoptante') {
         // Cargar todas las mascotas disponibles en la red
