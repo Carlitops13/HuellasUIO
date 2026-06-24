@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllPets, getOurPets, addPet, deletePet, uploadMascotaImage } from '../services/mascotaService';
-import { getSolicitudesRecibidas, responderSolicitudAdopcion, postularAdopcion, getMisSolicitudes } from '../services/authService';
+import { getSolicitudesRecibidas, responderSolicitudAdopcion, postularAdopcion, getMisSolicitudes, getGenericProfile } from '../services/authService';
 import { getAllUsers, createUserAdmin, updateUserAdmin, deleteUserAdmin, toggleSuspendUserAdmin } from '../services/adminService';
 
 // --- FUNCIONES UTILITARIAS DE MAPEADO ---
@@ -24,14 +24,15 @@ const calcularEdadJS = (fechaNacimiento) => {
 
 const mapearMascotaAPI = (m) => ({
   id: m.id,
-  nombre: m.nombre,
+  nombre: m.nombre || 'Sin nombre',
   tipo: m.especie === 'gato' ? 'Gato' : m.especie === 'perro' ? 'Perro' : 'Otro',
   edad: calcularEdadJS(m.fecha_nacimiento_estimada),
   genero: m.sexo === 'hembra' ? 'Hembra' : 'Macho',
   imagen: m.foto_url || 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=500',
-  ubicacion: m.sector_quito,
+  ubicacion: m.sector_quito || 'Quito',
   rasgo: m.descripcion || 'Cariñoso',
-  rescatista: m.registrado_por_perfil?.nombre_completo || 'Rescatista'
+  rescatista: m.registrado_por_perfil?.nombre_completo || 'Rescatista',
+  estadoAdopcion: m.estado_adopcion || 'disponible'
 });
 
 const mapearMisSolicitudesAPI = (sol) => ({
@@ -120,47 +121,66 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
     setTimeout(() => setMensaje({ texto: '', tipo: '' }), 5000);
   };
 
-  // --- 1. LEER EL ROL DESDE EL TOKEN ---
+  // --- 1. LEER EL ROL DESDE EL TOKEN Y BASE DE DATOS ---
   useEffect(() => {
     if (!token) return;
-    try {
-      let datosUsuario = null;
-      if (typeof token === 'string' && (token.startsWith('{') || token.startsWith('['))) {
-        datosUsuario = JSON.parse(token);
-      } else if (typeof token === 'object') {
-        datosUsuario = token;
-      } 
-      else if (typeof token === 'string' && token.split('.').length === 3) {
-        const payloadBase64 = token.split('.')[1];
-        const payloadDecodificado = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
-        datosUsuario = JSON.parse(payloadDecodificado);
-      }
+    const inicializarUsuario = async () => {
+      try {
+        let datosUsuario = null;
+        if (typeof token === 'string' && (token.startsWith('{') || token.startsWith('['))) {
+          datosUsuario = JSON.parse(token);
+        } else if (typeof token === 'object') {
+          datosUsuario = token;
+        } 
+        else if (typeof token === 'string' && token.split('.').length === 3) {
+          const payloadBase64 = token.split('.')[1];
+          const payloadDecodificado = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+          datosUsuario = JSON.parse(payloadDecodificado);
+        }
 
-      if (datosUsuario) {
-        const userObj = datosUsuario.user || datosUsuario;
-        const name = userObj?.user_metadata?.nombre || userObj?.user_metadata?.full_name || userObj?.nombre || userObj?.email;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (name) setNombreUsuario(name);
+        if (datosUsuario) {
+          const userObj = datosUsuario.user || datosUsuario;
+          const name = userObj?.user_metadata?.nombre || userObj?.user_metadata?.full_name || userObj?.nombre || userObj?.email;
+          if (name) setNombreUsuario(name);
 
-        const rolDetectado = userObj?.user_metadata?.rol || userObj?.user_metadata?.role || userObj?.rol || userObj?.role || datosUsuario?.rol;
-        
-        if (rolDetectado) {
-          const rolLimpio = rolDetectado.toString().trim().toLowerCase();
-          if (rolLimpio.includes('rescat')) {
-            setRolUsuario('rescatista');
-            setSeccionActiva('inicio'); 
-          } else if (rolLimpio.includes('admin')) {
-            setRolUsuario('administrador');
-            setSeccionActiva('explorar');
-          } else {
-            setRolUsuario(rolLimpio);
-            setSeccionActiva('explorar'); 
+          let rolDetectado = userObj?.user_metadata?.rol || userObj?.user_metadata?.role || userObj?.rol || datosUsuario?.rol;
+          if (rolDetectado === 'authenticated') {
+            rolDetectado = undefined;
+          }
+          
+          // Si no está el rol en la metadata del token, consultamos la base de datos
+          if (!rolDetectado) {
+            try {
+              const perfil = await getGenericProfile(token);
+              rolDetectado = perfil?.rol;
+              if (perfil?.nombre_completo) {
+                setNombreUsuario(perfil.nombre_completo);
+              }
+            } catch (profileErr) {
+              console.error("Error al obtener perfil genérico en inicialización:", profileErr);
+            }
+          }
+
+          if (rolDetectado) {
+            const rolLimpio = rolDetectado.toString().trim().toLowerCase();
+            if (rolLimpio.includes('rescat')) {
+              setRolUsuario('rescatista');
+              setSeccionActiva('inicio'); 
+            } else if (rolLimpio.includes('admin')) {
+              setRolUsuario('administrador');
+              setSeccionActiva('explorar');
+            } else {
+              setRolUsuario(rolLimpio);
+              setSeccionActiva('explorar'); 
+            }
           }
         }
+      } catch (error) {
+        console.error("Error al procesar el token en el Dashboard:", error);
       }
-    } catch (error) {
-      console.error("Error al procesar el token en el Dashboard:", error);
-    }
+    };
+
+    inicializarUsuario();
   }, [token]);
 
   // --- 2. CARGAR DATOS DESDE LA API SEGÚN EL ROL ---
@@ -170,30 +190,35 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
     setLoading(true);
     try {
       if (rolUsuario === 'rescatista') {
-        // Cargar las mascotas del rescatista
-        const petsData = await getOurPets(token);
-        setMascotas(petsData);
+        // Cargar las mascotas del rescatista (si estamos en inicio) o todas (si estamos en explorar)
+        let petsData;
+        if (seccionActiva === 'explorar') {
+          petsData = await getAllPets();
+        } else {
+          petsData = await getOurPets(token);
+        }
+        setMascotas(Array.isArray(petsData) ? petsData : []);
 
         // Cargar las solicitudes de adopción recibidas
         const solicitudesData = await getSolicitudesRecibidas(token);
-        setSolicitudesRecibidas(solicitudesData.map(mapearSolicitudRecibidaAPI));
+        setSolicitudesRecibidas(Array.isArray(solicitudesData) ? solicitudesData.map(mapearSolicitudRecibidaAPI) : []);
       } else if (rolUsuario === 'adoptante') {
         // Cargar todas las mascotas disponibles en la red
         const petsData = await getAllPets();
-        setMascotas(petsData);
+        setMascotas(Array.isArray(petsData) ? petsData : []);
 
         // Cargar solicitudes enviadas
         const solicitudesData = await getMisSolicitudes(token);
-        setMisSolicitudes(solicitudesData.map(mapearMisSolicitudesAPI));
+        setMisSolicitudes(Array.isArray(solicitudesData) ? solicitudesData.map(mapearMisSolicitudesAPI) : []);
       } else if (rolUsuario === 'administrador') {
         // Admin ve todo el catálogo general
         const petsData = await getAllPets();
-        setMascotas(petsData);
+        setMascotas(Array.isArray(petsData) ? petsData : []);
 
         // Cargar perfiles de usuario
         try {
           const usersData = await getAllUsers(token);
-          setUsuarios(usersData);
+          setUsuarios(Array.isArray(usersData) ? usersData : []);
         } catch (userErr) {
           console.error("Error al cargar usuarios:", userErr);
         }
@@ -216,7 +241,8 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
   const mascotasFiltradas = mascotas.map(mapearMascotaAPI).filter(m => {
     const coincideBusqueda = m.nombre.toLowerCase().includes(busqueda.toLowerCase()) || m.ubicacion.toLowerCase().includes(busqueda.toLowerCase());
     const coincideCategoria = categoriaSel === 'Todos' || m.tipo === categoriaSel;
-    return coincideBusqueda && coincideCategoria;
+    const coincideEstado = seccionActiva !== 'explorar' || m.estadoAdopcion !== 'adoptado';
+    return coincideBusqueda && coincideCategoria && coincideEstado;
   });
 
   const misRescatados = mascotasFiltradas;
@@ -844,7 +870,15 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
                     <div className="p-5">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-bold text-[#1c1c19] text-base" style={{ fontFamily: "'Quicksand', sans-serif" }}>{m.nombre}</h3>
-                        <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Refugiado</span>
+                        {m.estadoAdopcion === 'adoptado' ? (
+                          <span className="text-[10px] bg-gray-50 text-gray-600 font-bold px-2 py-0.5 rounded-full border border-gray-200">Adoptado</span>
+                        ) : m.estadoAdopcion === 'en_proceso' ? (
+                          <span className="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-full border border-amber-200">En proceso</span>
+                        ) : m.estadoAdopcion === 'comunitario_monitoreado' ? (
+                          <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full border border-blue-200">Monitoreado</span>
+                        ) : (
+                          <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Disponible</span>
+                        )}
                       </div>
                       <p className="text-xs text-[#89726d] mb-1">{m.ubicacion} • {m.rasgo}</p>
                       <p className="text-xs text-[#56423e] font-medium mb-4">Edad: {m.edad}</p>
