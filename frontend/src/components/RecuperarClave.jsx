@@ -2,7 +2,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = "http://localhost:3000/api/auth";
+const esLocal = window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' || 
+                window.location.hostname.startsWith('192.168.') || 
+                window.location.hostname.startsWith('10.') || 
+                window.location.hostname === '::1';
+                
+const BaseURL = import.meta.env.VITE_BASE_URL_PRODUCCION || 
+  (esLocal ? 'http://localhost:3000' : 'https://huellas-uio.vercel.app/_/backend');
+
+const API_URL = `${BaseURL}/api/auth`;
 
 export default function RecuperarClave() {
     const navigate = useNavigate();
