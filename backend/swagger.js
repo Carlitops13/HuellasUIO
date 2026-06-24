@@ -196,20 +196,29 @@ const swaggerSpec = swaggerJSDoc({
 // ... Todo tu objeto manualPaths y swaggerSpec se mantiene igual que antes ...
 
 function setupSwagger(app) {
-  // En producción, el prefijo de Vercel altera la ruta de los recursos estáticos.
-  // Usamos el entorno para definir el path correcto de los assets de Swagger.
-  const swaggerOptions = isDevelopment 
-    ? {} 
-    : { swaggerOptions: { baseUrl: '/_/backend/api-docs/' } };
+  // 1. Servir el JSON del spec directamente por si quieres consumirlo externamente
+  app.get('/api-docs/json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
 
-  // Montamos el middleware en la ruta relativa de Express
+  // 2. Servir la interfaz UI configurando los paths de forma absoluta para Vercel
   app.use(
-    '/api-docs', 
-    swaggerUi.serve, 
-    swaggerUi.setup(swaggerSpec, { 
-      explorer: true,
-      ...swaggerOptions 
-    })
+    '/api-docs',
+    swaggerUi.serveFiles(swaggerSpec, {
+      swaggerOptions: {
+        url: '/_/backend/api-docs/json' // Apunta al endpoint JSON que creamos arriba
+      }
+    }),
+    (req, res) => {
+      // Forzamos a swaggerUi a generar el HTML usando el Spec correcto
+      const html = swaggerUi.generateHTML(swaggerSpec, {
+        swaggerOptions: {
+          url: '/_/backend/api-docs/json'
+        }
+      });
+      res.send(html);
+    }
   );
 }
 
