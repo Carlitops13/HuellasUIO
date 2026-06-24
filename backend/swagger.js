@@ -198,73 +198,74 @@ const swaggerSpec = swaggerJSDoc({
 const path = require('path');
 
 function setupSwagger(app) {
-  // 1. Servir los archivos estáticos directamente desde el node_modules de swagger-ui-dist
-  // Esto garantiza que los scripts existan de forma local en tu servidor (y en Vercel)
-  try {
-    const swaggerUiAssetPath = require('swagger-ui-dist').getAbsoluteFSPath();
-    // En local exponemos directo, en producción con el prefijo correcto de Vercel
-    app.use('/api-docs/assets', require('express').static(swaggerUiAssetPath));
-  } catch (e) {
-    console.error("Asegúrate de tener instalado swagger-ui-dist o swagger-ui-express");
-  }
-
-  // 2. Endpoint que expone tu JSON de especificaciones
+  // Endpoint del JSON (esto sigue igual)
   app.get('/api-docs/json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.json(swaggerSpec);
   });
 
-  // 3. Renderizado del HTML apuntando a tus propios archivos locales expuestos arriba
+  // Ruta principal con CDN (la más confiable en Vercel)
   app.get('/api-docs', (req, res) => {
-    // Ajustamos la ruta base según el entorno para Vercel
-    const baseAssetUrl = isDevelopment ? '/api-docs/assets' : '/_/backend/api-docs/assets';
-    const jsonUrl = isDevelopment ? '/api-docs/json' : '/_/backend/api-docs/json';
+    const jsonUrl = isDevelopment 
+      ? '/api-docs/json' 
+      : '/_/backend/api-docs/json'; // ajusta según tu ruta real
 
     const html = `
       <!DOCTYPE html>
       <html lang="es">
       <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Huellas UIO API Docs</title>
-        <link rel="stylesheet" type="text/css" href="${baseAssetUrl}/swagger-ui.css" />
+        
+        <!-- CSS desde CDN -->
+        <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
+        
         <style>
-          html { box-sizing: border-box; overflow: -webkit-scrollbar; }
-          *, *:before, *:after { box-sizing: inherit; }
-          body { margin:0; background: #fafafa; }
+          html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: #fafafa;
+          }
+          #swagger-ui {
+            height: 100vh;
+          }
+          /* Pequeños ajustes visuales */
+          .swagger-ui .topbar { display: none; }
+          .swagger-ui .info { margin: 20px 0; }
         </style>
       </head>
       <body>
         <div id="swagger-ui"></div>
-        
-        <!-- Cargamos los scripts locales desde tu propio servidor -->
-        <script src="${baseAssetUrl}/swagger-ui-bundle.js"></script>
-        <script src="${baseAssetUrl}/swagger-ui-standalone-preset.js"></script>
-        
+
+        <!-- Scripts desde CDN -->
+        <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js" crossorigin></script>
+        <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js" crossorigin></script>
+
         <script>
           window.onload = function() {
-            if (typeof SwaggerUIBundle !== 'undefined') {
-              window.ui = SwaggerUIBundle({
-                url: "${jsonUrl}",
-                dom_id: '#swagger-ui',
-                deepLinking: true,
-                presets: [
-                  SwaggerUIBundle.presets.apis,
-                  SwaggerUIStandalonePreset
-                ],
-                plugins: [
-                  SwaggerUIBundle.plugins.DownloadUrl
-                ],
-                layout: "BaseLayout"
-              });
-            } else {
-              document.getElementById('swagger-ui').innerHTML = 
-                "<p style='color:red; padding:20px;'>Error crítico: No se pudieron cargar los scripts locales de Swagger.</p>";
-            }
+            window.ui = SwaggerUIBundle({
+              url: "${jsonUrl}",
+              dom_id: '#swagger-ui',
+              deepLinking: true,
+              presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+              ],
+              plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+              ],
+              layout: "StandaloneLayout",   // Mejor que BaseLayout
+              persistAuthorization: true,
+              displayRequestDuration: true
+            });
           };
         </script>
       </body>
       </html>
     `;
+
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
   });
