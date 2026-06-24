@@ -39,4 +39,7 @@ router.get('/adoptante/viewAdoptionStatus', requireAuth, authorizeRoles("adoptan
 
 router.get('/adoptante/myAdoptionRequests', requireAuth, authorizeRoles("adoptante"), userController.verMisSolicitudes);
 
+// Obtener perfil genérico de cualquier usuario autenticado (para resolver el rol desde la base de datos)
+router.get('/profile', requireAuth, perfilesController.obtenerMiPerfil);
+
 module.exports = router;

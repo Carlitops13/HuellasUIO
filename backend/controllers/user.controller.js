@@ -158,6 +158,18 @@ const responderSolicitud = async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
+    // Si la solicitud de adopción es aprobada, actualizar automáticamente el estado de la mascota a "adoptado"
+    if (estadoFinal === 'aprobada') {
+      const { error: petUpdateError } = await req.supabase
+        .from('mascotas')
+        .update({ estado_adopcion: 'adoptado' })
+        .eq('id', solicitudActualizada.mascota_id);
+      
+      if (petUpdateError) {
+        console.error('Error al actualizar estado de adopción de la mascota:', petUpdateError);
+      }
+    }
+
     return res.status(200).json({
       message: 'Solicitud actualizada exitosamente.',
       solicitud: solicitudActualizada

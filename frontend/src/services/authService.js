@@ -301,7 +301,7 @@ export async function postularAdopcion(mascotaId, motivo, tieneOtrasMascotas, ti
  */
 export async function getMisSolicitudes(token) {
   try {
-    const response = await fetch(`${PERFILES_API_URL}/adoptante/viewAdoptionStatus`, {
+    const response = await fetch(`${PERFILES_API_URL}/adoptante/myAdoptionRequests`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -314,6 +314,28 @@ export async function getMisSolicitudes(token) {
     return data;
   } catch (error) {
     console.error("Error en getMisSolicitudes:", error);
+    throw error;
+  }
+}
+
+/**
+ * Obtiene el perfil de cualquier usuario autenticado de forma rol-agnóstica.
+ */
+export async function getGenericProfile(token) {
+  try {
+    const response = await fetch(`${PERFILES_API_URL}/profile`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Error al obtener tu perfil genérico.");
+    }
+    return data;
+  } catch (error) {
+    console.error("Error en getGenericProfile:", error);
     throw error;
   }
 }
