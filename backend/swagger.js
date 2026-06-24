@@ -193,8 +193,24 @@ const swaggerSpec = swaggerJSDoc({
 });
 
 // 3. Setup de la ruta sin mutaciones internas
+// ... Todo tu objeto manualPaths y swaggerSpec se mantiene igual que antes ...
+
 function setupSwagger(app) {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
+  // En producción, el prefijo de Vercel altera la ruta de los recursos estáticos.
+  // Usamos el entorno para definir el path correcto de los assets de Swagger.
+  const swaggerOptions = isDevelopment 
+    ? {} 
+    : { swaggerOptions: { baseUrl: '/_/backend/api-docs/' } };
+
+  // Montamos el middleware en la ruta relativa de Express
+  app.use(
+    '/api-docs', 
+    swaggerUi.serve, 
+    swaggerUi.setup(swaggerSpec, { 
+      explorer: true,
+      ...swaggerOptions 
+    })
+  );
 }
 
 module.exports = { setupSwagger };
