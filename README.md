@@ -175,6 +175,14 @@ La aplicación incluye un flujo de restablecimiento de contraseña:
 
 Esta sección documenta el uso a nivel funcional. Para detalles técnicos (rutas/endpoints, configuración y despliegue), se recomienda revisar las secciones existentes del README y el código del backend/frontend.
 
+---
+
+## Documentación adicional de la API
+
+Para la lista de endpoints y detalles de alto nivel, revisa:
+- **`API.md`** (documentación separada de la API)
+
+
 
 
 
