@@ -3,6 +3,25 @@ const supabase = require('../supabase');
 /**
  * Enviar solicitud de adopción.
  */
+
+const verEstadoPostulaciones = async (req, res) => {
+  try {
+    const { data: solicitudes, error } = await req.supabase
+      .from('solicitudes_adopcion')
+      .select('id, mascota_id, estado_solicitud, creado_el')
+      .eq('adoptante_id', req.user.id)
+      .order('creado_el', { ascending: false });
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+    return res.status(200).json(solicitudes);
+  } catch (err) {
+    console.error('Error en verEstadoPostulaciones:', err);
+    return res.status(500).json({ error: 'Error interno del servidor al consultar el estado de las postulaciones.' });
+  }
+};
+
 const postularAdopcion = async (req, res) => {
   const { mascota_id, motivo_adopcion, tiene_otras_mascotas, tipo_vivienda } = req.body || {};
 
@@ -36,7 +55,7 @@ const postularAdopcion = async (req, res) => {
       solicitud
     });
   } catch (err) {
-    console.error('Error en postularAdopcion:', err);
+    console.error('Error en postular Adopcion:', err);
     return res.status(500).json({ error: 'Error interno del servidor al procesar la solicitud.' });
   }
 };
@@ -178,5 +197,6 @@ module.exports = {
   verMisSolicitudes,
   verSolicitudesRecibidas,
   responderSolicitud,
-  eliminarMiPerfil
+  eliminarMiPerfil,
+  verEstadoPostulaciones
 };

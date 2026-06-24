@@ -2,16 +2,19 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
+const http = require('http');
+const { initSocket } = require('./chats/socket'); // Importas tu archivo
 // Importar rutas
 const authRoutes = require('./routes/auth.routes');
 const perfilesRoutes = require('./routes/perfiles.routes');
 const adminRoutes = require('./routes/admin.routes');
 const userRoutes = require('./routes/user.routes');
 const petsRoutes = require('./routes/pets.routes');
+const chatRoutes = require('./routes/chat.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+const server = http.createServer(app);
 // Middlewares globales
 app.use(cors()); // Permite peticiones desde el frontend (Vite)
 app.use(express.json()); // Permite procesar cuerpos en formato JSON
@@ -37,6 +40,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/pets', petsRoutes); // Rutas de mascotas
+app.use('/api/chats', chatRoutes); // Rutas de chats
 // Middleware para capturar rutas no encontradas (404)
 app.use((req, res, next) => {
   res.status(404).json({ error: `Ruta no encontrada: ${req.originalUrl}` });
@@ -50,9 +54,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Iniciar el servidor
-app.listen(PORT, () => {
-  console.log(`Servidor Express corriendo en http://localhost:${PORT}`);
+initSocket(server);
+
+server.listen(PORT, () => {
+  console.log(`Servidor y websocket corriendo en el puerto ${PORT}`);
 });
 
 module.exports = app;
