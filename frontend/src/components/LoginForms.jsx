@@ -33,14 +33,15 @@ const calcularEdadJS = (fechaNacimiento) => {
 
 const mapearMascotaAPI = (m) => ({
   id: m.id,
-  nombre: m.nombre,
+  nombre: m.nombre || 'Sin nombre',
   tipo: m.especie === 'gato' ? 'Gato' : m.especie === 'perro' ? 'Perro' : 'Otro',
   edad: calcularEdadJS(m.fecha_nacimiento_estimada),
   genero: m.sexo === 'hembra' ? 'Hembra' : 'Macho',
   imagen: m.foto_url || 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=500',
-  ubicacion: m.sector_quito,
+  ubicacion: m.sector_quito || 'Quito',
   rasgo: m.descripcion || 'Cariñoso',
-  rescatista: m.registrado_por_perfil?.nombre_completo || 'Rescatista'
+  rescatista: m.registrado_por_perfil?.nombre_completo || 'Rescatista',
+  estadoAdopcion: m.estado_adopcion || 'disponible'
 });
 
 export default function LoginForms({ onLoginSuccess }) {
@@ -204,9 +205,12 @@ export default function LoginForms({ onLoginSuccess }) {
 
   // Filtrado de mascotas
   const mascotasFiltradas = mascotas.map(mapearMascotaAPI).filter(m => {
-    const coincideBusqueda = m.nombre.toLowerCase().includes(busqueda.toLowerCase()) || m.ubicacion.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideBusqueda = 
+      (m.nombre && m.nombre.toLowerCase().includes(busqueda.toLowerCase())) || 
+      (m.ubicacion && m.ubicacion.toLowerCase().includes(busqueda.toLowerCase()));
     const coincideCategoria = categoriaSel === 'Todos' || m.tipo === categoriaSel;
-    return coincideBusqueda && coincideCategoria;
+    const noAdoptado = m.estadoAdopcion !== 'adoptado';
+    return coincideBusqueda && coincideCategoria && noAdoptado;
   });
 
   return (
