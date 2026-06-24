@@ -1,6 +1,47 @@
 import { useState, useEffect } from "react";
 import { loginUser, registerUser, recoverPassword } from "../services/authService";
+import { getAllPets } from "../services/mascotaService";
 import maxImage from "../assets/max.webp";
+import Header from "./Header";
+
+// Importar logos de fundaciones desde assets
+import paeLogo from "../assets/pae.png";
+import ubaLogo from "../assets/uba.png";
+import luckyLogo from "../assets/lucky.png";
+import walkingLogo from "../assets/walking.png"; 
+import caminoCasaLogo from "../assets/caminoCasa.png";
+import poliperrosLogo from "../assets/poli.png";
+
+// --- FUNCIONES UTILITARIAS DE MAPEADO ---
+const calcularEdadJS = (fechaNacimiento) => {
+  if (!fechaNacimiento) return 'Desconocida';
+  const hoy = new Date();
+  const cumple = new Date(fechaNacimiento);
+  let anios = hoy.getFullYear() - cumple.getFullYear();
+  let meses = hoy.getMonth() - cumple.getMonth();
+  
+  if (meses < 0 || (meses === 0 && hoy.getDate() < cumple.getDate())) {
+    anios--;
+    meses += 12;
+  }
+  
+  if (anios > 0) {
+    return `${anios} ${anios === 1 ? 'año' : 'años'} y ${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+  }
+  return `${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+};
+
+const mapearMascotaAPI = (m) => ({
+  id: m.id,
+  nombre: m.nombre,
+  tipo: m.especie === 'gato' ? 'Gato' : m.especie === 'perro' ? 'Perro' : 'Otro',
+  edad: calcularEdadJS(m.fecha_nacimiento_estimada),
+  genero: m.sexo === 'hembra' ? 'Hembra' : 'Macho',
+  imagen: m.foto_url || 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=500',
+  ubicacion: m.sector_quito,
+  rasgo: m.descripcion || 'Cariñoso',
+  rescatista: m.registrado_por_perfil?.nombre_completo || 'Rescatista'
+});
 
 export default function LoginForms({ onLoginSuccess }) {
   // Estado para alternar entre Iniciar Sesión y Registro
@@ -26,6 +67,29 @@ export default function LoginForms({ onLoginSuccess }) {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // --- ESTADOS DE MASCOTAS (PÚBLICO) ---
+  const [mascotas, setMascotas] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [categoriaSel, setCategoriaSel] = useState("Todos");
+  const [loadingPets, setLoadingPets] = useState(false);
+  const [fotoAmpliada, setFotoAmpliada] = useState(null);
+
+  // Cargar mascotas del catálogo público
+  useEffect(() => {
+    const cargarMascotas = async () => {
+      setLoadingPets(true);
+      try {
+        const data = await getAllPets();
+        setMascotas(data);
+      } catch (err) {
+        console.error("Error al cargar mascotas públicas:", err);
+      } finally {
+        setLoadingPets(false);
+      }
+    };
+    cargarMascotas();
+  }, []);
 
   // Efecto visual de entrada original
   useEffect(() => {
@@ -60,12 +124,9 @@ export default function LoginForms({ onLoginSuccess }) {
       setSuccess("¡Ingreso Exitoso!");
       
       if (data.session && data.session.access_token) {
-        // Guardamos el token en sessionStorage
+        // Guardamos el token y usuario en sessionStorage
         sessionStorage.setItem("token", data.session.access_token);
-        
-        
         sessionStorage.setItem("user", JSON.stringify(data.user));
-        
         
         setTimeout(() => {
           onLoginSuccess(data.session.access_token);
@@ -113,7 +174,6 @@ export default function LoginForms({ onLoginSuccess }) {
     setIsLoading(true);
 
     try {
-      
       await registerUser(registerEmail, registerPassword, nombreCompleto, registerRol);
       setSuccess("¡Registro Exitoso! Redirigiendo al login...");
       
@@ -133,6 +193,21 @@ export default function LoginForms({ onLoginSuccess }) {
       setIsLoading(false);
     }
   };
+
+  const handleAdoptarClick = (nombreMascota) => {
+    setError(`Para postular a la adopción de ${nombreMascota}, por favor inicia sesión o regístrate a continuación.`);
+    const loginSection = document.getElementById("login-section");
+    if (loginSection) {
+      loginSection.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  // Filtrado de mascotas
+  const mascotasFiltradas = mascotas.map(mapearMascotaAPI).filter(m => {
+    const coincideBusqueda = m.nombre.toLowerCase().includes(busqueda.toLowerCase()) || m.ubicacion.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideCategoria = categoriaSel === 'Todos' || m.tipo === categoriaSel;
+    return coincideBusqueda && coincideCategoria;
+  });
 
   return (
     <div className="bg-[#fdf9f4] text-[#1c1c19] min-h-screen flex flex-col overflow-x-hidden selection:bg-[#ffdad3]">
@@ -158,26 +233,12 @@ export default function LoginForms({ onLoginSuccess }) {
       <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&family=Nunito+Sans:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet"/>
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
-      {/* Cabecera */}
-      <header className="bg-[#fdf9f4]/90 backdrop-blur-md shadow-sm shadow-[#9d3d2c]/5 top-0 z-50 sticky">
-        <div className="flex justify-between items-center w-full px-5 md:px-16 max-w-[1280px] mx-auto h-16">
-          <div className="text-2xl md:text-3xl text-[#9d3d2c] tracking-tight font-bold" style={{ fontFamily: "'Quicksand', sans-serif" }}>
-            Huellas UIO
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Encuentra una mascota</a>
-            <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Como funciona</a>
-            <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Nuestros refugios</a>
-            <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Historias</a>
-          </nav>
-          <button className="bg-[#9d3d2c] text-white px-6 py-1.5 rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
-            Help
-          </button>
-        </div>
-      </header>
+      {/* Cabecera Unificada */}
+      <Header token="" vistaActual="login" onVolver={() => window.scrollTo({ top: 0, behavior: "smooth" })} />
 
       <main className="flex-1">
-        <section className="flex flex-col md:flex-row overflow-hidden min-h-[calc(100vh-64px)]">
+        {/* Sección de Login/Registro */}
+        <section id="login-section" className="flex flex-col md:flex-row overflow-hidden min-h-[calc(100vh-64px)] border-b border-[#ddc0bb]/20">
           
           {/* LADO IZQUIERDO: Tarjeta de Autenticación */}
           <div className="w-full md:w-1/2 flex items-center justify-center p-6 bg-[#ffffff] relative z-10">
@@ -372,7 +433,6 @@ export default function LoginForms({ onLoginSuccess }) {
                           </div>
                         </div>
 
-                        
                         <div className="space-y-1">
                           <label className="text-xs font-bold text-[#56423e] ml-1" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>Tipo de Cuenta / Rol</label>
                           <div className="relative group">
@@ -389,7 +449,6 @@ export default function LoginForms({ onLoginSuccess }) {
                             <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#89726d] pointer-events-none">arrow_drop_down</span>
                           </div>
                         </div>
-                        {/* ========================================== */}
 
                         <div className="space-y-1">
                           <label className="text-xs font-bold text-[#56423e] ml-1" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>Contraseña</label>
@@ -510,7 +569,216 @@ export default function LoginForms({ onLoginSuccess }) {
             />
           </div>
         </section>
+
+        {/* ================= SECCIÓN DE CATÁLOGO PÚBLICO ================= */}
+        <section id="catalogo-publico" className="py-16 bg-[#ffffff]">
+          <div className="max-w-[1280px] mx-auto px-5 md:px-16" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+            <div className="text-center mb-10">
+              <h2 className="text-3xl text-[#9d3d2c] font-black mb-2" style={{ fontFamily: "'Quicksand', sans-serif" }}>
+                Encuentra una mascota
+              </h2>
+              <p className="text-xs text-[#89726d] font-bold uppercase tracking-wider">
+                Explora los peluditos en busca de hogar en la red de fundaciones de Quito
+              </p>
+            </div>
+
+            {/* Barra de Búsqueda y Filtros */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+              <div className="relative max-w-md w-full group">
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#89726d] group-focus-within:text-[#9d3d2c] text-lg">search</span>
+                <input 
+                  type="text" 
+                  placeholder="Buscar por nombre o sector..." 
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  className="w-full pl-11 pr-4 py-2.5 bg-[#f7f3ee]/50 rounded-xl border border-[#ddc0bb] focus:border-[#9d3d2c] focus:ring-4 focus:ring-[#9d3d2c]/10 transition-all text-[#1c1c19] outline-none text-sm"
+                />
+              </div>
+
+              <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1">
+                {['Todos', 'Perro', 'Gato'].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoriaSel(cat)}
+                    className={`px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${categoriaSel === cat ? 'bg-[#9d3d2c] border-[#9d3d2c] text-white shadow-md' : 'bg-white border-[#ddc0bb] text-[#56423e] hover:border-[#9d3d2c]'}`}
+                  >
+                    {cat === 'Todos' ? ' Todos' : cat === 'Perro' ? 'Perros' : 'Gatos'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Grid de Mascotas */}
+            {loadingPets ? (
+              <div className="text-center py-16">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9d3d2c] mx-auto mb-4"></div>
+                <p className="text-sm text-[#89726d]">Cargando catálogo unificado...</p>
+              </div>
+            ) : mascotasFiltradas.length === 0 ? (
+              <div className="bg-[#fdf9f4] p-12 rounded-3xl border border-[#ddc0bb]/30 text-center shadow-inner max-w-md mx-auto">
+                <span className="material-symbols-outlined text-4xl text-[#89726d] mb-2">pets</span>
+                <p className="text-[#89726d] font-semibold">No se encontraron mascotas en este momento.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {mascotasFiltradas.map((m) => (
+                  <div key={m.id} className="bg-white rounded-3xl overflow-hidden border border-[#ddc0bb]/30 shadow-md flex flex-col justify-between hover:shadow-lg transition-shadow">
+                    <div 
+                      onClick={() => setFotoAmpliada({ url: m.imagen, nombre: m.nombre })}
+                      className="relative aspect-square overflow-hidden bg-[#f7f3ee] group cursor-zoom-in"
+                    >
+                      <img 
+                        src={m.imagen} 
+                        alt={m.nombre} 
+                        className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110" 
+                      />
+                    </div>
+                    <div className="p-5">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-bold text-[#1c1c19] text-base" style={{ fontFamily: "'Quicksand', sans-serif" }}>{m.nombre}</h3>
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${m.genero === 'Macho' ? 'bg-blue-50 text-blue-600' : 'bg-pink-50 text-pink-600'}`}>{m.genero}</span>
+                      </div>
+                      <p className="text-xs text-[#89726d] mb-1 font-semibold">{m.ubicacion} • {m.rasgo}</p>
+                      <p className="text-xs text-[#56423e] font-semibold mb-1">Edad: {m.edad}</p>
+                      <p className="text-[10px] text-[#9d3d2c] font-black uppercase tracking-wider mb-4">A cargo: {m.rescatista}</p>
+                      <button 
+                        onClick={() => handleAdoptarClick(m.nombre)}
+                        className="w-full bg-[#9d3d2c] hover:bg-[#802919] text-white font-bold py-2.5 rounded-full text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-sm">volunteer_activism</span>
+                        Adoptar / Conocer
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ================= SECCIÓN DE ALIADOS ("APOYADO POR") ================= */}
+        <section id="apoyado-por" className="py-16 bg-[#f7f3ee] border-t border-[#ddc0bb]/30">
+          <div className="max-w-[1280px] mx-auto px-5 md:px-16 text-center">
+            <h2 className="text-2xl text-[#9d3d2c] font-black mb-2" style={{ fontFamily: "'Quicksand', sans-serif" }}>
+              Nuestras Fundaciones Aliadas
+            </h2>
+            <p className="text-xs text-[#89726d] font-bold uppercase tracking-wider mb-10">
+              Unificando esfuerzos para encontrar su hogar ideal 
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 lg:gap-14 opacity-80 hover:opacity-100 transition-opacity">
+              {/* PAE */}
+              <div className="flex flex-col items-center gap-2.5 group cursor-pointer">
+                <div className="w-28 h-28 md:w-32 md:h-32 bg-white rounded-3xl p-4 shadow-md border border-[#ddc0bb]/20 flex items-center justify-center group-hover:scale-105 transition-all">
+                  <img src={paeLogo} alt="PAE Logo" className="max-w-full max-h-full object-contain" />
+                </div>
+                <span className="text-xs font-bold text-[#56423e] group-hover:text-[#9d3d2c] transition-colors" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+                  PAE Ecuador
+                </span>
+              </div>
+
+              {/* UBA */}
+              <div className="flex flex-col items-center gap-2.5 group cursor-pointer">
+                <div className="w-28 h-28 md:w-32 md:h-32 bg-white rounded-3xl p-4 shadow-md border border-[#ddc0bb]/20 flex items-center justify-center group-hover:scale-105 transition-all">
+                  <img src={ubaLogo} alt="UBA Quito Logo" className="max-w-full max-h-full object-contain" />
+                </div>
+                <span className="text-xs font-bold text-[#56423e] group-hover:text-[#9d3d2c] transition-colors" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+                  UBA Quito
+                </span>
+              </div>
+
+              {/* Lucky */}
+              <div className="flex flex-col items-center gap-2.5 group cursor-pointer">
+                <div className="w-28 h-28 md:w-32 md:h-32 bg-white rounded-3xl p-4 shadow-md border border-[#ddc0bb]/20 flex items-center justify-center group-hover:scale-105 transition-all">
+                  <img src={luckyLogo} alt="Fundación Lucky Logo" className="max-w-full max-h-full object-contain" />
+                </div>
+                <span className="text-xs font-bold text-[#56423e] group-hover:text-[#9d3d2c] transition-colors" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+                  Fundación Lucky
+                </span>
+              </div>
+
+              {/* Walking */}
+              <div className="flex flex-col items-center gap-2.5 group cursor-pointer">
+                <div className="w-28 h-28 md:w-32 md:h-32 bg-white rounded-3xl p-4 shadow-md border border-[#ddc0bb]/20 flex items-center justify-center group-hover:scale-105 transition-all">
+                  <img src={walkingLogo} alt="Walking Friends Logo" className="max-w-full max-h-full object-contain" />
+                </div>
+                <span className="text-xs font-bold text-[#56423e] group-hover:text-[#9d3d2c] transition-colors" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+                  Walking Friends
+                </span>
+              </div>
+
+              {/* Camino a Casa */}
+              <div className="flex flex-col items-center gap-2.5 group cursor-pointer">
+                <div className="w-28 h-28 md:w-32 md:h-32 bg-white rounded-3xl p-4 shadow-md border border-[#ddc0bb]/20 flex items-center justify-center group-hover:scale-105 transition-all">
+                  <img src={caminoCasaLogo} alt="Camino a Casa Logo" className="max-w-full max-h-full object-contain" />
+                </div>
+                <span className="text-xs font-bold text-[#56423e] group-hover:text-[#9d3d2c] transition-colors" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+                  Camino a Casa
+                </span>
+              </div> 
+
+              {/* Poliperros */}
+              <div className="flex flex-col items-center gap-2.5 group cursor-pointer">
+                <div className="w-28 h-28 md:w-32 md:h-32 bg-white rounded-3xl p-4 shadow-md border border-[#ddc0bb]/20 flex items-center justify-center group-hover:scale-105 transition-all">
+                  <img src={poliperrosLogo} alt="Poliperros EPN Logo" className="max-w-full max-h-full object-contain" />
+                </div>
+                <span className="text-xs font-bold text-[#56423e] group-hover:text-[#9d3d2c] transition-colors" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+                  Poliperros EPN
+                </span>
+              </div>
+               
+
+            </div>
+          </div>
+        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-[#1c1c19] text-[#fffbff]/60 py-12 border-t border-white/5">
+        <div className="max-w-[1280px] mx-auto px-5 md:px-16 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2 text-white font-extrabold text-lg select-none cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ fontFamily: "'Quicksand', sans-serif" }}>
+            <span className="material-symbols-outlined text-[#9d3d2c] text-2xl">pets</span>
+            <span>Huellas UIO</span>
+          </div>
+          <p className="text-xs text-center md:text-left" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+            &copy; 2026 Huellas UIO. Todos los derechos reservados. Campaña permanente #AdoptaNoCompres.
+          </p>
+          <div className="flex gap-4 text-xs font-bold" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+            <a href="#" className="hover:text-white transition-colors">Términos</a>
+            <a href="#" className="hover:text-white transition-colors">Privacidad</a>
+            <a href="#" className="hover:text-white transition-colors">Contacto</a>
+          </div>
+        </div>
+      </footer>
+
+      {/* MODAL ZOOM DE IMAGEN */}
+      {fotoAmpliada && (
+        <div 
+          className="fixed inset-0 bg-[#1c1c19]/90 backdrop-blur-md z-50 flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setFotoAmpliada(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 text-white hover:text-[#ffdad3] transition-all bg-white/10 hover:bg-white/20 p-2 rounded-full flex items-center justify-center cursor-pointer border-0"
+            onClick={() => setFotoAmpliada(null)}
+          >
+            <span className="material-symbols-outlined text-2xl">close</span>
+          </button>
+          
+          <div 
+            className="relative max-w-4xl max-h-[85vh] flex flex-col items-center gap-4 bg-white/5 p-4 rounded-3xl border border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={fotoAmpliada.url} 
+              alt={fotoAmpliada.nombre} 
+              className="max-h-[75vh] w-auto object-contain rounded-2xl shadow-2xl"
+            />
+            <div className="text-center text-white font-bold text-lg" style={{ fontFamily: "'Quicksand', sans-serif" }}>
+              {fotoAmpliada.nombre}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

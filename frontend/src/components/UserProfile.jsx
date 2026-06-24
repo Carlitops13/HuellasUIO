@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getProfile, updateProfile, updatePassword, logoutUser } from "../services/authService";
 import maxImage from "../assets/max.webp";
+import Header from "./Header";
 
 export default function UserProfile({ token, onLogout, onVolver }) {
   // Estados del Perfil del Usuario
@@ -204,38 +205,14 @@ export default function UserProfile({ token, onLogout, onVolver }) {
       <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&family=Nunito+Sans:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet"/>
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
-      {/* Cabecera */}
-      <header className="bg-[#fdf9f4]/90 backdrop-blur-md shadow-sm shadow-[#9d3d2c]/5 top-0 z-50 sticky">
-        <div className="flex justify-between items-center w-full px-5 md:px-16 max-w-[1280px] mx-auto h-16">
-          <div className="flex items-center gap-3">
-            {!isProfilePending && (
-              <button 
-                onClick={onVolver}
-                className="flex items-center justify-center p-1.5 rounded-full border border-[#ddc0bb]/30 bg-white hover:bg-[#f7f3ee] text-[#9d3d2c] hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer"
-                title="Volver a ver mascotas"
-              >
-                <span className="material-symbols-outlined text-xl">arrow_back</span>
-              </button>
-            )}
-            <div 
-              className={`text-2xl md:text-3xl text-[#9d3d2c] tracking-tight font-bold ${!isProfilePending ? 'cursor-pointer' : ''}`}
-              style={{ fontFamily: "'Quicksand', sans-serif" }}
-              onClick={!isProfilePending ? onVolver : undefined}
-            >
-              Huellas UIO
-            </div>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <button onClick={!isProfilePending ? onVolver : undefined} className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm bg-transparent border-0 cursor-pointer" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>Encuentra una mascota</button>
-            <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Como funciona</a>
-            <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Nuestros refugios</a>
-            <a className="text-[#56423e] hover:text-[#9d3d2c] transition-colors font-bold text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }} href="#">Historias</a>
-          </nav>
-          <button className="bg-[#9d3d2c] text-white px-6 py-1.5 rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
-            Ayuda
-          </button>
-        </div>
-      </header>
+      {/* Cabecera Unificada */}
+      <Header 
+        token={token} 
+        onLogout={onLogout} 
+        onIrAPerfil={() => {}} 
+        onVolver={!isProfilePending ? onVolver : undefined} 
+        vistaActual="perfil" 
+      />
 
       <main className="flex-1">
         <section className="flex flex-col md:flex-row overflow-hidden min-h-[calc(100vh-64px)]">
