@@ -1,7 +1,13 @@
-const API_URL = "http://localhost:3000/api/auth";
-const PERFILES_API_URL = "http://localhost:3000/api/perfiles";
+const esLocal = window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' || 
+                window.location.hostname.startsWith('192.168.') || 
+                window.location.hostname.startsWith('10.') || 
+                window.location.hostname === '::1';
 
-/**
+const BaseURL = import.meta.env.VITE_BASE_URL_PRODUCCION || 
+  (esLocal ? 'http://localhost:3000' : 'https://huellas-uio.vercel.app/_/backend');
+const API_URL = `${BaseURL}/api/auth`;
+const PERFILES_API_URL = `${BaseURL}/api/users`;/**
  * Inicia sesión del usuario enviando credenciales al backend de Express.
  */
 export async function confirmRecoverPassword(accessToken, password) {
@@ -80,10 +86,7 @@ export async function loginUser(email, password) {
   }
 }
 
-/**
- * Registra un nuevo usuario enviando datos al backend de Express.
- */
-export async function registerUser(email, password, nombreCompleto) {
+export async function registerUser(email, password, nombreCompleto, rol) {
   try {
     const response = await fetch(`${API_URL}/register`, {
       method: "POST",
@@ -91,9 +94,10 @@ export async function registerUser(email, password, nombreCompleto) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email,
-        password,
+        email: email,
+        password: password,
         nombre_completo: nombreCompleto,
+        rol: rol, // <-- Aquí nos aseguramos de que viaje el rol seleccionado ('adoptante' o 'rescatista')
       }),
     });
 
@@ -140,7 +144,7 @@ export async function logoutUser(token) {
  */
 export async function getProfile(token) {
   try {
-    const response = await fetch(`${PERFILES_API_URL}/mi-perfil`, {
+    const response = await fetch(`${PERFILES_API_URL}/adoptante/viewProfile`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -165,7 +169,7 @@ export async function getProfile(token) {
  */
 export async function updateProfile(profileData, token) {
   try {
-    const response = await fetch(`${PERFILES_API_URL}/mi-perfil`, {
+    const response = await fetch(`${PERFILES_API_URL}/adoptante/updateProfile`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -190,7 +194,7 @@ export async function updateProfile(profileData, token) {
 /**
  * Actualiza la contraseña en Supabase Auth.
  */
-export async function updatePassword(password, token) {
+export async function updatePassword(oldPassword, password, token) {
   try {
     const response = await fetch(`${API_URL}/update-password`, {
       method: "POST",
@@ -198,7 +202,7 @@ export async function updatePassword(password, token) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ oldPassword, password }),
     });
 
     const data = await response.json();
@@ -210,6 +214,128 @@ export async function updatePassword(password, token) {
     return data;
   } catch (error) {
     console.error("Error en updatePassword service:", error);
+    throw error;
+  }
+}
+
+/**
+ * Obtener solicitudes de adopción recibidas (Rescatistas).
+ */
+export async function getSolicitudesRecibidas(token) {
+  try {
+    const response = await fetch(`${PERFILES_API_URL}/rescatista/solicitudesRecibidas`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Error al obtener solicitudes recibidas.");
+    }
+    return data;
+  } catch (error) {
+    console.error("Error en getSolicitudesRecibidas:", error);
+    throw error;
+  }
+}
+
+/**
+ * Responder a una solicitud de adopción (Rescatistas).
+ */
+export async function responderSolicitudAdopcion(idSolicitud, estado, comentarios, token) {
+  try {
+    const response = await fetch(`${PERFILES_API_URL}/rescatista/responderSolicitud/${idSolicitud}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        estado_solicitud: estado,
+        comentarios_admin: comentarios,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Error al actualizar la solicitud.");
+    }
+    return data;
+  } catch (error) {
+    console.error("Error en responderSolicitudAdopcion:", error);
+    throw error;
+  }
+}
+
+/**
+ * Postular a una adopción (Adoptante).
+ */
+export async function postularAdopcion(mascotaId, motivo, tieneOtrasMascotas, tipoVivienda, token) {
+  try {
+    const response = await fetch(`${PERFILES_API_URL}/adoptante/adoptionRequest`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        mascota_id: mascotaId,
+        motivo_adopcion: motivo,
+        tiene_otras_mascotas: tieneOtrasMascotas === "Sí" || tieneOtrasMascotas === true,
+        tipo_vivienda: tipoVivienda,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Error al enviar la solicitud.");
+    }
+    return data;
+  } catch (error) {
+    console.error("Error en postularAdopcion:", error);
+    throw error;
+  }
+}
+
+/**
+ * Obtener estado de solicitudes enviadas (Adoptante).
+ */
+export async function getMisSolicitudes(token) {
+  try {
+    const response = await fetch(`${PERFILES_API_URL}/adoptante/myAdoptionRequests`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Error al consultar tus solicitudes.");
+    }
+    return data;
+  } catch (error) {
+    console.error("Error en getMisSolicitudes:", error);
+    throw error;
+  }
+}
+
+/**
+ * Obtiene el perfil de cualquier usuario autenticado de forma rol-agnóstica.
+ */
+export async function getGenericProfile(token) {
+  try {
+    const response = await fetch(`${PERFILES_API_URL}/profile`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Error al obtener tu perfil genérico.");
+    }
+    return data;
+  } catch (error) {
+    console.error("Error en getGenericProfile:", error);
     throw error;
   }
 }

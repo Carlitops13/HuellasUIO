@@ -1,3 +1,4 @@
+const { createClient } = require('@supabase/supabase-js');
 const supabase = require('../supabase');
 
 /**
@@ -5,7 +6,7 @@ const supabase = require('../supabase');
 
  */
 const registro = async (req, res) => {
-  const { email, password, nombre_completo } = req.body;
+  const { email, password, nombre_completo, rol } = req.body || {};
 
   if (!email || !password || !nombre_completo) {
     return res.status(400).json({
@@ -13,14 +14,23 @@ const registro = async (req, res) => {
     });
   }
 
+  // Validar rol si es provisto
+  const rolesValidos = ['admin_fundacion', 'rescatista', 'adoptante'];
+  const rolFinal = rol ? rol.toLowerCase() : 'adoptante';
+  if (rol && !rolesValidos.includes(rolFinal)) {
+    return res.status(400).json({
+      error: `Rol inválido. Debe ser uno de: ${rolesValidos.join(', ')}`
+    });
+  }
+
   try {
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.toLowerCase(), // Convertimos el email a minúsculas para evitar problemas de mayúsculas/minúsculas
       password,
       options: {
-        // Guardamos nombre completo  en la  para que el trigger de Supabase lo tome
         data: {
-          full_name: nombre_completo
+          full_name: nombre_completo.toUpperCase(), // Convertimos el nombre completo a mayúsculas antes de guardarlo
+          rol: rolFinal
         }
       }
     });
@@ -45,7 +55,7 @@ const registro = async (req, res) => {
  * Retorna los datos de sesión (incluyendo access_token y refresh_token).
  */
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
 
   if (!email || !password) {
     return res.status(400).json({
@@ -55,7 +65,7 @@ const login = async (req, res) => {
 
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.toLowerCase(),
       password
     });
 
@@ -83,14 +93,14 @@ const logout = async (req, res) => {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
-      
+
       // Establecemos temporalmente la sesión en el cliente para poder ejecutar el signOut 
       const { error } = await supabase.auth.signOut(token);
       if (error) {
         return res.status(400).json({ error: error.message });
       }
     }
-    
+
     return res.status(200).json({ message: 'Sesión cerrada exitosamente.' });
   } catch (err) {
     console.error('Error en logout:', err);
@@ -102,19 +112,49 @@ const logout = async (req, res) => {
  * Actualiza la contraseña del usuario en Supabase Auth.
  */
 const actualizarPassword = async (req, res) => {
-  const { password } = req.body;
+  const { oldPassword, password } = req.body || {};
+
+  if (!oldPassword) {
+    return res.status(400).json({
+      error: 'Por favor, proporciona la contraseña antigua.'
+    });
+  }
 
   if (!password || password.length < 6) {
     return res.status(400).json({
-      error: 'La contraseña debe tener al menos 6 caracteres.'
+      error: 'La nueva contraseña debe tener al menos 6 caracteres.'
     });
   }
 
   try {
-    const { data, error } = await req.supabase.auth.updateUser({ password });
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
+    // Crear un cliente temporal de Supabase para verificar las credenciales actuales
+    const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    });
+
+    // Iniciar sesión con el email del usuario y la contraseña antigua
+    const { data: loginData, error: loginError } = await tempClient.auth.signInWithPassword({
+      email: req.user.email.toLowerCase(),
+      password: oldPassword
+    });
+
+    if (loginError) {
+      return res.status(400).json({
+        error: 'La contraseña antigua es incorrecta.'
+      });
+    }
+
+    // Una vez autenticado exitosamente en el cliente temporal, procedemos a actualizar la contraseña
+    const { error: updateError } = await tempClient.auth.updateUser({ password });
+
+    if (updateError) {
+      return res.status(400).json({ error: updateError.message });
     }
 
     return res.status(200).json({
@@ -131,17 +171,20 @@ const actualizarPassword = async (req, res) => {
  * Envia un correo con el flujo de reset password de Supabase.
  */
 const recuperarClave = async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body || {};
 
   if (!email) {
     return res.status(400).json({
       error: 'Por favor, proporciona el email.'
     });
   }
+  const urlEmail = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:5173/recuperarClave'
+  : 'https://huellas-uio.vercel.app/recuperarClave';
 
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'http://localhost:5173/'
+      redirectTo: urlEmail // URL a la que el usuario será redirigido después de hacer clic en el enlace del correo
     });
 
     if (error) {
@@ -158,15 +201,13 @@ const recuperarClave = async (req, res) => {
   }
 };
 
-/**
- * Confirma (finaliza) la recuperación de contraseña.
- * Recibe el access_token generado por Supabase (type=recovery) y una nueva password.
- */
+//confirmar recuperacion de clave|
 const confirmarRecuperarClave = async (req, res) => {
-  const { access_token, password } = req.body;
 
-  if (!access_token) {
-    return res.status(400).json({ error: 'Por favor, proporciona el access_token de recuperación.' });
+  const { token, password } = req.body || {};
+
+  if (!token) {
+    return res.status(400).json({ error: 'Por favor, proporciona el token de recuperación.' });
   }
 
   if (!password || password.length < 6) {
@@ -174,22 +215,47 @@ const confirmarRecuperarClave = async (req, res) => {
   }
 
   try {
-    // Supabase utiliza el JWT de recuperación para permitir setear una nueva clave
-    const { data, error } = await supabase.auth.exchangeCodeForSession(access_token, password);
+    // Usar cliente temporal 
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+    const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    });
 
-    // Nota: exchangeCodeForSession espera un auth code, no un access token de recovery.
-    // Como esta API puede variar según versión, intentamos el método estándar de supabase:
-    // Si falla, devolvemos el error original para que puedas ajustar.
-    if (error) {
-      return res.status(400).json({ error: error.message });
+    // 1. Crear la sesión del usuario en Supabase 
+    const { data: sessionData, error: sessionError } = await tempClient.auth.setSession({
+      access_token: token,
+      refresh_token: token
+    });
+
+    if (sessionError) {
+      return res.status(400).json({ error: 'El token de recuperación es inválido o ha expirado.' });
     }
 
-    return res.status(200).json({ message: 'Contraseña recuperada exitosamente.', data });
+    // 2. Actualizar la contraseña del usuario en Supabase 
+    const { data: userData, error: updateError } = await tempClient.auth.updateUser({
+      password: password
+    });
+
+    if (updateError) {
+      return res.status(400).json({ error: updateError.message });
+    }
+
+    // 3. Respuesta exitosa devolviendo los datos del usuario modificado
+    return res.status(200).json({
+      message: 'Contraseña recuperada exitosamente.',
+      data: userData
+    });
+
   } catch (err) {
     console.error('Error en confirmarRecuperarClave:', err);
     return res.status(500).json({ error: 'Error interno del servidor al recuperar la contraseña.' });
   }
 };
+
 
 module.exports = {
   registro,

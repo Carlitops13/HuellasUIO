@@ -43,7 +43,28 @@ const getClientWithToken = (token) => {
 };
 
 
+const uploadBufferToStorage = async (bucketName, fileName, buffer, contentType) => {
+  const adminClient = supabaseAdmin || supabase;
+  const { data, error } = await adminClient.storage
+    .from(bucketName)
+    .upload(fileName, buffer, {
+      contentType: contentType,
+      upsert: true
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  const { data: { publicUrl } } = adminClient.storage
+    .from(bucketName)
+    .getPublicUrl(fileName);
+
+  return publicUrl;
+};
+
 supabase.admin = supabaseAdmin;
 supabase.getClientWithToken = getClientWithToken;
+supabase.uploadBufferToStorage = uploadBufferToStorage;
 
 module.exports = supabase;
