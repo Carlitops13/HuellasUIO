@@ -28,7 +28,7 @@ const viewOurPets = async (req, res) => {
  * Valida los datos y asigna registrado_por al ID del rescatista.
  */
 const addPet = async (req, res) => {
-  const { nombre, especie, fecha_nacimiento_estimada, tamano, sexo, estado_esterilizacion, descripcion, foto_url, sector_quito } = req.body || {};
+  const { nombre, especie, fecha_nacimiento_estimada, tamano, sexo, estado_esterilizacion, descripcion, foto_url, sector_quito, especiePrediccion } = req.body || {};
 
   if (!nombre || !fecha_nacimiento_estimada || !sector_quito) {
     return res.status(400).json({
@@ -54,6 +54,9 @@ const addPet = async (req, res) => {
   }
   if (sexo && !sexosValidos.includes(sexoFinal)) {
     return res.status(400).json({ error: `Sexo inválido. Valores válidos: ${sexosValidos.join(', ')}` });
+  }
+  if (especiePrediccion && especiePrediccion.toLowerCase() !== especieFinal) {
+    return res.status(400).json({ error: `La especie predicha no coincide con la especie proporcionada. Verifica que sea un ${especieFinal}.` });
   }
 
   try {
