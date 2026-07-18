@@ -91,6 +91,8 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
   const [loading, setLoading] = useState(false);
   const [loadingTexto, setLoadingTexto] = useState('Cargando...');
   const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorModalText, setErrorModalText] = useState('');
 
   // --- ESTADOS DE MASCOTAS ---
   const [mascotas, setMascotas] = useState([]);
@@ -387,6 +389,42 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
     try {
       // 1. Subir la imagen al storage de Supabase a través de Express
       const uploadResult = await uploadMascotaImage(nuevaImagenArchivo, token);
+
+      if (!uploadResult.ok) {
+        const mensajeError = uploadResult.status === 400
+          ? 'La imagen no corresponde a un perro o un gato.'
+          : uploadResult.error || uploadResult.mensaje || 'Error en el análisis de la imagen.';
+
+        if (uploadResult.status === 400) {
+          setErrorModalText(mensajeError);
+          setErrorModalOpen(true);
+        }
+
+        mostrarMensaje(mensajeError, 'error');
+        setLoading(false);
+        return;
+      }
+
+      const especieSeleccionada = nuevoTipo.toLowerCase() === 'perro' ? 'perro' : nuevoTipo.toLowerCase() === 'gato' ? 'gato' : nuevoTipo.toLowerCase();
+      const especieDetectada = uploadResult.tipo?.toLowerCase();
+
+      if (especieDetectada && especieDetectada !== especieSeleccionada) {
+        const mensajeError = 'Error: la imagen no corresponde a la especie seleccionada.';
+        // Misma UI que el error de imagen no corresponde a un perro o gato
+        setErrorModalText(mensajeError);
+        setErrorModalOpen(true);
+
+        mostrarMensaje(mensajeError, 'error');
+        setLoading(false);
+        return;
+      }
+
+      if (!uploadResult.url) {
+        mostrarMensaje('Error al procesar la imagen. Intenta con otra foto.', 'error');
+        setLoading(false);
+        return;
+      }
+
       const fotoUrl = uploadResult.url;
 
       // Calcular la fecha de nacimiento estimada a partir de edadAnios y edadMeses
@@ -798,48 +836,6 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
       </div>
     );
   };
-  const renderFundaciones = () => {
-  const listaFundaciones = [
-    { id: 'f1', nombre: 'Fundación PAE', img: paeLogo },
-    { id: 'f2', nombre: 'UBA', img: ubaLogo },
-    { id: 'f3', nombre: 'Lucky Bienestar', img: luckyLogo },
-    { id: 'f4', nombre: 'Walking Dog', img: walkingLogo },
-    { id: 'f5', nombre: 'Camino a Casa', img: caminoCasaLogo },
-    { id: 'f6', nombre: 'Poliperros', img: poliperrosLogo }
-  ];
-
-  return (
-    <div className="mt-12 mb-16">
-      <h2 className="text-2xl text-[#9d3d2c] mb-8 font-bold" style={{ fontFamily: "'Quicksand', sans-serif" }}>
-        Fundaciones Aliadas
-      </h2>
-      
-      {/* Contenedor del Carrusel con scroll horizontal suave */}
-      <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x" style={{ scrollBehavior: 'smooth' }}>
-        {listaFundaciones.map((f) => (
-          <div 
-            key={f.id} 
-            className="snap-center min-w-[280px] md:min-w-[320px] bg-white p-8 rounded-[2rem] border border-[#ddc0bb]/30 shadow-lg flex flex-col items-center transform transition-transform hover:scale-105"
-          >
-            <div className="w-24 h-24 bg-[#fdf9f4] rounded-full mb-6 flex items-center justify-center border border-[#ddc0bb]/20">
-              <img src={f.img} alt={f.nombre} className="w-16 h-16 object-contain" />
-            </div>
-            <h3 className="font-bold text-[#1c1c19] text-lg mb-2 text-center">{f.nombre}</h3>
-            <p className="text-[#89726d] text-xs text-center mb-6 px-4">
-              Apoya la labor de rescate y alimentación de esta fundación.
-            </p>
-            <button 
-              onClick={() => abrirDonacion(f.nombre, f.id, 'fundacion')}
-              className="w-full bg-[#9d3d2c] text-white font-bold py-3 rounded-full text-sm hover:bg-[#802919] transition-all shadow-md"
-            >
-              Donar ahora
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
   // --- COMPONENTE INTERNO: CATÁLOGO DE ADOPCIONES ---
   const renderCatalogoAdopciones = () => (
@@ -919,6 +915,39 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
       )}
     </div>
   );
+
+  const renderFundaciones = () => {
+    const listaFundaciones = [
+      { id: 'f1', nombre: 'Fundación PAE', img: paeLogo },
+      { id: 'f2', nombre: 'UBA', img: ubaLogo },
+      { id: 'f3', nombre: 'Lucky Bienestar', img: luckyLogo },
+      { id: 'f4', nombre: 'Walking Dog', img: walkingLogo },
+      { id: 'f5', nombre: 'Camino a Casa', img: caminoCasaLogo },
+      { id: 'f6', nombre: 'Poliperros', img: poliperrosLogo }
+    ];
+
+    return (
+      <div className="mt-12 mb-16">
+        <h2 className="text-2xl text-[#9d3d2c] mb-8 font-bold" style={{ fontFamily: "'Quicksand', sans-serif" }}>
+          Fundaciones Aliadas
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {listaFundaciones.map((f) => (
+            <div key={f.id} className="bg-white p-6 rounded-[2rem] border border-[#ddc0bb]/30 shadow-lg flex items-center gap-4">
+              <div className="w-16 h-16 bg-[#fdf9f4] rounded-full flex items-center justify-center border border-[#ddc0bb]/20">
+                <img src={f.img} alt={f.nombre} className="w-12 h-12 object-contain" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#1c1c19] text-base mb-1">{f.nombre}</h3>
+                <p className="text-[#89726d] text-xs">Apoya la labor de rescate y alimentación de esta fundación.</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#fdf9f4] text-[#1c1c19] flex overflow-x-hidden selection:bg-[#ffdad3]">
@@ -1622,6 +1651,24 @@ export default function DashboardForm({ token, onLogout, onIrAPerfil }) {
           </div>
         </div>
       )}
+
+      {errorModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#1c1c19]/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-xl rounded-3xl border border-[#ddc0bb]/40 shadow-2xl p-6 text-center" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+            <div className="mb-4 text-[#9d3c2c] text-sm uppercase font-bold tracking-[0.2em]">Rechazo de imagen</div>
+            <div className="mb-6 text-[#1c1c19] text-base leading-relaxed">
+              {errorModalText}
+            </div>
+            <button
+              onClick={() => setErrorModalOpen(false)}
+              className="inline-flex items-center justify-center px-5 py-3 rounded-full bg-gradient-to-r from-[#9d3d2c] to-[#bd5541] text-white font-bold text-sm hover:shadow-lg transition-all"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
       <DonationModal 
         isOpen={isDonationModalOpen} 
         onClose={() => setIsDonationModalOpen(false)} 

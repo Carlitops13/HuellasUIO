@@ -113,11 +113,15 @@ export async function uploadMascotaImage(file, token) {
       body: formData
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(async () => {
+      const text = await response.text().catch(() => '');
+      return { error: text || response.statusText || 'Error al subir la imagen.' };
+    });
+
     if (!response.ok) {
-      throw new Error(data.error || 'Error al subir la imagen.');
+      return { ok: false, status: response.status, ...data };
     }
-    return data; // Retorna { url: 'https://...' }
+    return { ok: true, ...data }; // Retorna { ok: true, url: 'https://...' }
   } catch (error) {
     console.error('Error en uploadMascotaImage service:', error);
     throw error;
