@@ -117,7 +117,7 @@ const deletePet = async (req, res) => {
  */
 const updatePet = async (req, res) => {
   const { id } = req.params;
-  const { nombre, especie, fecha_nacimiento_estimada, tamano, sexo, estado_esterilizacion, estado_adopcion, descripcion, foto_url, sector_quito } = req.body || {};
+  const { nombre, especie, fecha_nacimiento_estimada, tamano, sexo, estado_esterilizacion, estado_adopcion, descripcion, foto_url, sector_quito, especiePrediccion } = req.body || {};
 
   const updates = {};
   if (nombre !== undefined) updates.nombre = nombre;
@@ -143,6 +143,9 @@ const updatePet = async (req, res) => {
   }
   if (updates.estado_adopcion && !['disponible', 'en_proceso', 'adoptado', 'comunitario_monitoreado'].includes(updates.estado_adopcion)) {
     return res.status(400).json({ error: 'Estado de adopción inválido.' });
+  }
+  if (especiePrediccion && especiePrediccion.toLowerCase() !== especie) {
+    return res.status(400).json({ error: `La especie predicha no coincide con la especie proporcionada. Verifica que sea un ${especie}.` });
   }
 
   try {
